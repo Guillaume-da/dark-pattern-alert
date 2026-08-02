@@ -155,10 +155,14 @@ Puis ouvrir `http://localhost:8080/dark-pattern-alert/demo/` et lancer l’analy
 ## Développement
 
 ```sh
-npm test                 # les deux suites de règles
-npm run capture          # régénère les captures de docs/ (Playwright)
-npm run capture:system-chrome   # idem, avec un Chrome déjà installé
+npm test                 # les trois suites de règles
+npm run capture          # régénère les captures de docs/ en thème clair
+npm run capture:dark     # les mêmes en thème sombre, suffixées -dark
+npm run capture:all      # les deux jeux d'un coup
+npm run capture:system-chrome   # thème clair, avec un Chrome déjà installé
 ```
+
+Le thème se choisit aussi par `--scheme=light|dark|both` ou par `DPA_SCHEME`. Les captures sombres portent un suffixe `-dark` et ne remplacent jamais les claires, celles auxquelles ce README renvoie. La page de démonstration n'ayant pas d'habillage sombre, elle n'est capturée qu'une fois.
 
 | Fichier | Rôle |
 | --- | --- |

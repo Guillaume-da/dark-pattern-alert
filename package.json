@@ -6,7 +6,9 @@
   "scripts": {
     "test": "node test-rules.js && node test-reputation.js && node test-media.js",
     "capture": "node scripts/capture-docs.cjs",
-    "capture:system-chrome": "node scripts/capture-docs-with-system-chrome.cjs"
+    "capture:system-chrome": "node scripts/capture-docs-with-system-chrome.cjs",
+    "capture:dark": "node scripts/capture-docs.cjs --scheme=dark",
+    "capture:all": "node scripts/capture-docs.cjs --scheme=both"
   },
   "devDependencies": {
     "playwright": "^1.62.1"

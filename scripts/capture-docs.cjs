@@ -14,6 +14,24 @@ const mimeTypes = {
   ".png": "image/png"
 };
 
+// Thème des captures : « light » par défaut, « dark », ou « both ».
+// Passé par --scheme=dark ou par la variable DPA_SCHEME.
+const requestedScheme = (() => {
+  const flag = process.argv.find((argument) => argument.startsWith("--scheme="));
+  const value = (flag ? flag.slice("--scheme=".length) : process.env.DPA_SCHEME || "light").toLowerCase();
+  if (!["light", "dark", "both"].includes(value)) {
+    throw new Error(`Thème inconnu : « ${value} ». Valeurs acceptées : light, dark, both.`);
+  }
+  return value;
+})();
+
+const schemes = requestedScheme === "both" ? ["light", "dark"] : [requestedScheme];
+
+// Les captures sombres portent un suffixe pour ne pas écraser les claires,
+// qui restent celles utilisées par le README.
+const outputFor = (scheme) => (name) =>
+  path.join(outputRoot, scheme === "dark" ? name.replace(/\.png$/, "-dark.png") : name);
+
 fs.mkdirSync(outputRoot, { recursive: true });
 
 const server = http.createServer((request, response) => {
@@ -168,110 +186,127 @@ const renderResults = async (page, report) => {
   }, report);
 };
 
+const captureScheme = async (browser, baseUrl, scheme) => {
+  const out = outputFor(scheme);
+
+  const panel = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, colorScheme: scheme });
+  await panel.goto(`${baseUrl}/dark-pattern-alert/sidepanel.html`, { waitUntil: "networkidle" });
+  await panel.screenshot({ path: out("01-extension-welcome.png") });
+
+  const demo = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  await demo.goto(`${baseUrl}/dark-pattern-alert/demo/`, { waitUntil: "networkidle" });
+  // La page de démonstration n'a pas d'habillage sombre : la capturer deux
+  // fois donnerait deux images identiques.
+  if (scheme === "light") await demo.screenshot({ path: out("02-demo-page.png") });
+
+  await demo.evaluate(() => {
+    globalThis.chrome = { runtime: { onMessage: { addListener: () => {} } } };
+  });
+  await demo.addStyleTag({ path: path.join(extensionRoot, "content-overlay.css") });
+  await demo.addScriptTag({ path: path.join(extensionRoot, "detector-rules.js") });
+  await demo.addScriptTag({ path: path.join(extensionRoot, "content-scanner.js") });
+  const report = await demo.evaluate(() =>
+    globalThis.__darkPatternAlertScanner.scan({ includeLowConfidence: true, highlightsEnabled: true })
+  );
+
+  await demo.addScriptTag({ path: path.join(extensionRoot, "reputation-rules.js") });
+  await demo.addScriptTag({ path: path.join(extensionRoot, "site-probe.js") });
+  const trust = await demo.evaluate(() => {
+    const facts = globalThis.__darkPatternAlertProbe.collectFacts();
+    return globalThis.__dpaReputationRules.buildTrustReport({ url: facts.url, facts, firstVisit: true });
+  });
+
+  await demo.evaluate(() => document.querySelector("dialog")?.close());
+  await demo.evaluate(() =>
+    globalThis.__darkPatternAlertScanner.scan({ includeLowConfidence: true, highlightsEnabled: true })
+  );
+  if (scheme === "light") await demo.screenshot({ path: out("03-page-highlights.png"), fullPage: true });
+
+  await renderResults(panel, report);
+  await renderTrust(panel, trust);
+  await panel.screenshot({ path: out("04-analysis-results.png"), fullPage: true });
+
+  await panel.locator("#trustCard").screenshot({ path: out("05-site-reputation.png") });
+
+  // La page de démonstration n'est pas un média : la carte éditeur est
+  // illustrée à part, sur un titre réellement présent dans la table.
+  await panel.evaluate(() => {
+    const media = globalThis.__dpaMediaOwnership.lookupMedia("https://www.lemonde.fr/politique/");
+    const card = document.querySelector("#mediaCard");
+    card.hidden = false;
+    card.dataset.type = media.type;
+    document.querySelector("#mediaEyebrow").textContent = "Article de presse";
+    document.querySelector("#mediaName").textContent = media.name;
+    document.querySelector("#mediaType").textContent = media.typeLabel;
+    document.querySelector("#mediaOwner").textContent = media.owner;
+    document.querySelector("#mediaGroup").textContent = media.group;
+    document.querySelector("#mediaFunding").textContent = media.funding;
+    document.querySelector("#mediaNote").textContent =
+      `Faits d’actionnariat et de financement, arrêtés en ${media.snapshot}. Aucune appréciation de la ligne éditoriale, aucun effet sur les scores ci-dessus. L’actionnariat des médias change souvent : vérifiez avant de conclure.`;
+  });
+  await panel.locator("#mediaCard").screenshot({ path: out("07-media-ownership.png") });
+
+  // Le parcours de résiliation se construit sur plusieurs analyses : la
+  // capture illustre l'état obtenu après trois pages soumises par l'utilisateur.
+  await panel.evaluate(() => {
+    const card = document.querySelector("#journeyCard");
+    card.hidden = false;
+    document.querySelector("#mediaCard").hidden = true;
+    document.querySelector("#journeyTitle").textContent = "Résilier vous a demandé 3 pages sur ce site";
+    document.querySelector("#journeySummary").textContent =
+      "Étapes relevées sur 2 jours. 2 pages portaient un obstacle explicite. Seules les pages que vous avez analysées figurent ici.";
+    const steps = [
+      ["/mon-compte/abonnement", "Renouvellement ou facturation automatique"],
+      ["/mon-compte/resiliation", "Page du parcours, sans obstacle relevé"],
+      ["/aide/resiliation-telephone", "Résiliation soumise à une démarche supplémentaire"]
+    ];
+    const list = document.querySelector("#journeySteps");
+    list.replaceChildren();
+    for (const [path, note] of steps) {
+      const item = document.createElement("li");
+      item.className = "journey-step";
+      if (!note.startsWith("Page du parcours")) item.dataset.obstacle = "true";
+      const label = document.createElement("p");
+      label.className = "journey-path";
+      label.textContent = path;
+      const detail = document.createElement("p");
+      detail.className = "journey-note";
+      detail.textContent = note;
+      item.append(label, detail);
+      list.append(item);
+    }
+  });
+  await panel.locator("#journeyCard").screenshot({ path: out("08-cancellation-journey.png") });
+
+  await panel.evaluate(() => {
+    document.querySelector("#settingsPanel").hidden = false;
+    document.querySelector("#settingsButton").setAttribute("aria-expanded", "true");
+    document.querySelector("#resultsState").hidden = true;
+    document.querySelector("#welcomeState").hidden = true;
+  });
+  await panel.locator("#settingsPanel").screenshot({ path: out("06-settings.png") });
+
+  await panel.close();
+  await demo.close();
+
+  return { report, trust };
+};
+
 (async () => {
   const port = await listen();
   const baseUrl = `http://127.0.0.1:${port}`;
   const browser = await chromium.launch({ headless: true });
 
   try {
-    const panel = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
-    await panel.goto(`${baseUrl}/dark-pattern-alert/sidepanel.html`, { waitUntil: "networkidle" });
-    await panel.screenshot({ path: path.join(outputRoot, "01-extension-welcome.png") });
-
-    const demo = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
-    await demo.goto(`${baseUrl}/dark-pattern-alert/demo/`, { waitUntil: "networkidle" });
-    await demo.screenshot({ path: path.join(outputRoot, "02-demo-page.png") });
-
-    await demo.evaluate(() => {
-      globalThis.chrome = { runtime: { onMessage: { addListener: () => {} } } };
-    });
-    await demo.addStyleTag({ path: path.join(extensionRoot, "content-overlay.css") });
-    await demo.addScriptTag({ path: path.join(extensionRoot, "detector-rules.js") });
-    await demo.addScriptTag({ path: path.join(extensionRoot, "content-scanner.js") });
-    const report = await demo.evaluate(() =>
-      globalThis.__darkPatternAlertScanner.scan({ includeLowConfidence: true, highlightsEnabled: true })
+    let summary;
+    for (const scheme of schemes) {
+      summary = await captureScheme(browser, baseUrl, scheme);
+      console.log(`Thème ${scheme} : captures écrites dans ${outputRoot}`);
+    }
+    console.log(`Signaux utilisés dans le rapport : ${summary.report.findings.length}, score ${summary.report.score}/100`);
+    console.log(
+      `Confiance du site : ${summary.trust.score}/100 (${summary.trust.label}), ${summary.trust.alertCount} alerte(s)`
     );
-
-    await demo.addScriptTag({ path: path.join(extensionRoot, "reputation-rules.js") });
-    await demo.addScriptTag({ path: path.join(extensionRoot, "site-probe.js") });
-    const trust = await demo.evaluate(() => {
-      const facts = globalThis.__darkPatternAlertProbe.collectFacts();
-      return globalThis.__dpaReputationRules.buildTrustReport({ url: facts.url, facts, firstVisit: true });
-    });
-
-    await demo.evaluate(() => document.querySelector("dialog")?.close());
-    await demo.evaluate(() =>
-      globalThis.__darkPatternAlertScanner.scan({ includeLowConfidence: true, highlightsEnabled: true })
-    );
-    await demo.screenshot({ path: path.join(outputRoot, "03-page-highlights.png"), fullPage: true });
-
-    await renderResults(panel, report);
-    await renderTrust(panel, trust);
-    await panel.screenshot({ path: path.join(outputRoot, "04-analysis-results.png"), fullPage: true });
-
-    await panel.locator("#trustCard").screenshot({ path: path.join(outputRoot, "05-site-reputation.png") });
-
-    // La page de démonstration n'est pas un média : la carte éditeur est
-    // illustrée à part, sur un titre réellement présent dans la table.
-    await panel.evaluate(() => {
-      const media = globalThis.__dpaMediaOwnership.lookupMedia("https://www.lemonde.fr/politique/");
-      const card = document.querySelector("#mediaCard");
-      card.hidden = false;
-      card.dataset.type = media.type;
-      document.querySelector("#mediaEyebrow").textContent = "Article de presse";
-      document.querySelector("#mediaName").textContent = media.name;
-      document.querySelector("#mediaType").textContent = media.typeLabel;
-      document.querySelector("#mediaOwner").textContent = media.owner;
-      document.querySelector("#mediaGroup").textContent = media.group;
-      document.querySelector("#mediaFunding").textContent = media.funding;
-      document.querySelector("#mediaNote").textContent =
-        `Faits d’actionnariat et de financement, arrêtés en ${media.snapshot}. Aucune appréciation de la ligne éditoriale, aucun effet sur les scores ci-dessus. L’actionnariat des médias change souvent : vérifiez avant de conclure.`;
-    });
-    await panel.locator("#mediaCard").screenshot({ path: path.join(outputRoot, "07-media-ownership.png") });
-
-    // Le parcours de résiliation se construit sur plusieurs analyses : la
-    // capture illustre l'état obtenu après trois pages soumises par l'utilisateur.
-    await panel.evaluate(() => {
-      const card = document.querySelector("#journeyCard");
-      card.hidden = false;
-      document.querySelector("#mediaCard").hidden = true;
-      document.querySelector("#journeyTitle").textContent = "Résilier vous a demandé 3 pages sur ce site";
-      document.querySelector("#journeySummary").textContent =
-        "Étapes relevées sur 2 jours. 2 pages portaient un obstacle explicite. Seules les pages que vous avez analysées figurent ici.";
-      const steps = [
-        ["/mon-compte/abonnement", "Renouvellement ou facturation automatique"],
-        ["/mon-compte/resiliation", "Page du parcours, sans obstacle relevé"],
-        ["/aide/resiliation-telephone", "Résiliation soumise à une démarche supplémentaire"]
-      ];
-      const list = document.querySelector("#journeySteps");
-      list.replaceChildren();
-      for (const [path, note] of steps) {
-        const item = document.createElement("li");
-        item.className = "journey-step";
-        if (!note.startsWith("Page du parcours")) item.dataset.obstacle = "true";
-        const label = document.createElement("p");
-        label.className = "journey-path";
-        label.textContent = path;
-        const detail = document.createElement("p");
-        detail.className = "journey-note";
-        detail.textContent = note;
-        item.append(label, detail);
-        list.append(item);
-      }
-    });
-    await panel.locator("#journeyCard").screenshot({ path: path.join(outputRoot, "08-cancellation-journey.png") });
-
-    await panel.evaluate(() => {
-      document.querySelector("#settingsPanel").hidden = false;
-      document.querySelector("#settingsButton").setAttribute("aria-expanded", "true");
-      document.querySelector("#resultsState").hidden = true;
-      document.querySelector("#welcomeState").hidden = true;
-    });
-    await panel.locator("#settingsPanel").screenshot({ path: path.join(outputRoot, "06-settings.png") });
-
-    console.log(`Captures générées : ${outputRoot}`);
-    console.log(`Signaux utilisés dans le rapport : ${report.findings.length}, score ${report.score}/100`);
-    console.log(`Confiance du site : ${trust.score}/100 (${trust.label}), ${trust.alertCount} alerte(s)`);
   } finally {
     await browser.close();
     await closeServer();

@@ -52,4 +52,10 @@ Les quatre réglages tiennent dans un seul panneau, dont l’analyse de sécurit
 
 ## Régénérer les captures
 
-`npm run capture` recrée les huit images avec le Chromium de Playwright, `npm run capture:system-chrome` avec un Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.
+`npm run capture` recrée les images en thème clair avec le Chromium de Playwright, `npm run capture:dark` leurs équivalents sombres, suffixés `-dark`, et `npm run capture:all` les deux jeux. `npm run capture:system-chrome` réutilise un Chrome installé localement.
+
+Le panneau suit le thème du système : voici l'accueil et les réglages en apparence sombre.
+
+![Accueil en thème sombre](screenshots/01-extension-welcome-dark.png)
+
+![Réglages en thème sombre](screenshots/06-settings-dark.png) Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.
