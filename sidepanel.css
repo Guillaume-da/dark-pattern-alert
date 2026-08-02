@@ -1113,3 +1113,69 @@ input:focus-visible {
   color: var(--muted);
   font-size: 11px;
 }
+
+/* Parcours de résiliation */
+
+.journey-card {
+  margin: 12px 0 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warning);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.journey-eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.journey-card h2 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.journey-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.journey-steps {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 0 0 0 18px;
+  font-size: 12px;
+}
+
+.journey-step::marker {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.journey-step[data-obstacle="true"] .journey-path {
+  color: var(--danger);
+}
+
+.journey-path {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.journey-note {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}

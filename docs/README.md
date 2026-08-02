@@ -38,6 +38,12 @@ Sur les sites de presse répertoriés, une carte indique qui possède le titre e
 
 ![Carte éditeur et financement](screenshots/07-media-ownership.png)
 
+## Parcours de résiliation
+
+Les étapes de résiliation analysées sur un même site sont récapitulées, avec les obstacles rencontrés.
+
+![Carte du parcours de résiliation](screenshots/08-cancellation-journey.png)
+
 ## Réglages
 
 Les quatre réglages tiennent dans un seul panneau, dont l’analyse de sécurité et la mémorisation des domaines analysés, effaçable d’un clic.
@@ -46,4 +52,4 @@ Les quatre réglages tiennent dans un seul panneau, dont l’analyse de sécurit
 
 ## Régénérer les captures
 
-`npm run capture` recrée les sept images avec le Chromium de Playwright, `npm run capture:system-chrome` avec un Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.
+`npm run capture` recrée les huit images avec le Chromium de Playwright, `npm run capture:system-chrome` avec un Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.

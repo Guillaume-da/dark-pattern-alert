@@ -42,6 +42,9 @@
       /frais\s+(?:de\s+)?(?:livraison|port|exp[eé]dition|transport)|participation aux frais de port|delivery fee|shipping (?:fee|cost|charges?)/i,
     totalLabel:
       /\btotal\b|montant (?:total|[àa] payer|d[ûu])|net [àa] payer|reste [àa] payer|order total|grand total|amount due|total to pay/i,
+    // Adresses caractéristiques d'un parcours de résiliation.
+    cancellationPath:
+      /r[eé]sili|desabonn|d[eé]sabonn|desinscri|d[eé]sinscri|annul|cloture|cl[oô]ture|unsubscribe|cancel|close[-_]?account|delete[-_]?account|manage[-_]?subscription|end[-_]?membership/i,
     hiddenCostMention:
       /hors frais|frais en sus|frais non inclus|\+\s*frais|hors livraison|hors options|hors taxes|prix hors|excluding fees|fees not included|plus (?:taxes|fees)|before fees/i
   };
@@ -135,9 +138,50 @@
     return [finding.category || "?", normalize(finding.title), normalize(finding.evidence)].join("::");
   };
 
+  // Une étape de résiliation : soit l'adresse la désigne, soit l'analyse y a
+  // relevé un obstacle. Seules les pages explicitement analysées comptent —
+  // l'extension n'observe pas la navigation.
+  const cancellationStep = ({ url = "", findings = [] } = {}) => {
+    let path;
+    try {
+      const parsed = new URL(url);
+      path = parsed.pathname;
+    } catch {
+      return null;
+    }
+
+    const obstacles = findings.filter((finding) => finding.category === "cancellation");
+    const byPath = patterns.cancellationPath.test(path);
+    if (!byPath && obstacles.length === 0) return null;
+
+    return {
+      path,
+      byPath,
+      obstacles: obstacles.map((finding) => finding.title).slice(0, 3)
+    };
+  };
+
+  const summarizeJourney = (steps = []) => {
+    const paths = [...new Set(steps.map((step) => step.path))];
+    const withObstacles = steps.filter((step) => step.obstacles?.length > 0);
+    const times = steps.map((step) => step.at).filter((time) => typeof time === "number");
+    const obstacles = [...new Set(steps.flatMap((step) => step.obstacles || []))];
+
+    return {
+      pages: paths.length,
+      paths,
+      obstacleSteps: withObstacles.length,
+      obstacles,
+      firstAt: times.length ? Math.min(...times) : null,
+      lastAt: times.length ? Math.max(...times) : null
+    };
+  };
+
   const rules = Object.freeze({
     patterns: Object.freeze(patterns),
     findingSignature,
+    cancellationStep,
+    summarizeJourney,
     parseAmount,
     parseCountdown,
     compareCounter,

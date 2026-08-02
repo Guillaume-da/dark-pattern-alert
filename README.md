@@ -78,6 +78,19 @@ Le soupçon devient un constat daté, dans les deux sens : un compteur honnête 
 
 Le score de confiance part de 100 et descend selon les signaux trouvés : **≥ 80** aucun signal d’alerte, **55–79** prudence recommandée, **< 55** signaux préoccupants.
 
+#### Parcours de résiliation, sur plusieurs pages
+
+<table>
+  <tr>
+    <td width="48%"><img src="docs/screenshots/08-cancellation-journey.png" alt="Carte du parcours de résiliation" /></td>
+    <td width="52%" valign="top">
+      <p>Une résiliation qui s’étale sur cinq pages est un obstacle en soi, invisible page par page. L’extension retient les étapes de résiliation d’un même site et les récapitule.</p>
+      <p>Une page compte comme étape si son adresse la désigne (<code>/resiliation</code>, <code>/unsubscribe</code>, <code>/cancel</code>…) ou si l’analyse y a relevé un obstacle. Une simple page d’abonnement ne suffit pas : sans quoi toute page « s’abonner » deviendrait une étape.</p>
+      <p><strong>Rien n’est observé en arrière-plan.</strong> Seules figurent les pages que vous avez explicitement soumises à l’analyse — la carte le rappelle, car le compte est nécessairement partiel.</p>
+    </td>
+  </tr>
+</table>
+
 ### 3. Éditeur et financement, sur les sites de presse
 
 <table>
@@ -118,6 +131,7 @@ Les éléments signalés sont encadrés directement dans la page :
       <p><strong>Mémoriser les domaines analysés</strong> conserve au plus 500 noms de domaine sur lesquels une analyse a été explicitement lancée, uniquement pour signaler une première visite. Ni URL complète, ni horodatage, ni contenu de page. Désactivable avant toute analyse, effaçable d’un clic.</p>
       <p><strong>Comparer les compteurs</strong> conserve, pour au plus 200 pages portant un décompte, l’adresse sans paramètres, la valeur relevée et sa date. C’est ce qui permet de dire « ce compteur s’est réarmé » plutôt que « ce compteur est peut-être faux ». Même bouton d’effacement.</p>
       <p><strong>Tenir compte de mes retours</strong> conserve, pour au plus 300 sites, les signaux que vous avez confirmés ou écartés — sous forme d’empreinte, sans contenu de page. Même bouton d’effacement.</p>
+      <p><strong>Suivre les parcours de résiliation</strong> conserve, pour au plus 100 sites et 30 étapes chacun, le chemin des pages de résiliation analysées et les obstacles qui y ont été relevés. Même bouton d’effacement.</p>
     </td>
   </tr>
 </table>

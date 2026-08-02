@@ -229,6 +229,38 @@ const renderResults = async (page, report) => {
     });
     await panel.locator("#mediaCard").screenshot({ path: path.join(outputRoot, "07-media-ownership.png") });
 
+    // Le parcours de résiliation se construit sur plusieurs analyses : la
+    // capture illustre l'état obtenu après trois pages soumises par l'utilisateur.
+    await panel.evaluate(() => {
+      const card = document.querySelector("#journeyCard");
+      card.hidden = false;
+      document.querySelector("#mediaCard").hidden = true;
+      document.querySelector("#journeyTitle").textContent = "Résilier vous a demandé 3 pages sur ce site";
+      document.querySelector("#journeySummary").textContent =
+        "Étapes relevées sur 2 jours. 2 pages portaient un obstacle explicite. Seules les pages que vous avez analysées figurent ici.";
+      const steps = [
+        ["/mon-compte/abonnement", "Renouvellement ou facturation automatique"],
+        ["/mon-compte/resiliation", "Page du parcours, sans obstacle relevé"],
+        ["/aide/resiliation-telephone", "Résiliation soumise à une démarche supplémentaire"]
+      ];
+      const list = document.querySelector("#journeySteps");
+      list.replaceChildren();
+      for (const [path, note] of steps) {
+        const item = document.createElement("li");
+        item.className = "journey-step";
+        if (!note.startsWith("Page du parcours")) item.dataset.obstacle = "true";
+        const label = document.createElement("p");
+        label.className = "journey-path";
+        label.textContent = path;
+        const detail = document.createElement("p");
+        detail.className = "journey-note";
+        detail.textContent = note;
+        item.append(label, detail);
+        list.append(item);
+      }
+    });
+    await panel.locator("#journeyCard").screenshot({ path: path.join(outputRoot, "08-cancellation-journey.png") });
+
     await panel.evaluate(() => {
       document.querySelector("#settingsPanel").hidden = false;
       document.querySelector("#settingsButton").setAttribute("aria-expanded", "true");

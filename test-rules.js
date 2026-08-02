@@ -129,3 +129,36 @@ assert.equal(
   findingSignature({ category: "cost", title: "Frais ajoutés", evidence: "Frais de service 7,20 €" })
 );
 console.log("Empreintes de signaux vérifiées.");
+
+// Parcours de résiliation
+const { cancellationStep, summarizeJourney } = require("./detector-rules.js");
+const friction = { category: "cancellation", title: "Résiliation soumise à une démarche supplémentaire" };
+
+// L'adresse suffit à désigner une étape
+assert.deepEqual(cancellationStep({ url: "https://site.fr/compte/resiliation", findings: [] }), {
+  path: "/compte/resiliation",
+  byPath: true,
+  obstacles: []
+});
+assert.equal(cancellationStep({ url: "https://site.fr/mon-compte/unsubscribe", findings: [] }).byPath, true);
+
+// Un obstacle relevé suffit aussi, même sur une adresse quelconque
+const byFinding = cancellationStep({ url: "https://site.fr/aide/faq", findings: [friction] });
+assert.equal(byFinding.byPath, false);
+assert.deepEqual(byFinding.obstacles, [friction.title]);
+
+// Ni l'un ni l'autre : pas une étape
+assert.equal(cancellationStep({ url: "https://site.fr/produits", findings: [] }), null);
+assert.equal(cancellationStep({ url: "pas-une-url", findings: [friction] }), null);
+
+const journey = summarizeJourney([
+  { path: "/compte", obstacles: [], at: 1_700_000_000_000 },
+  { path: "/compte/abonnement", obstacles: [], at: 1_700_086_400_000 },
+  { path: "/compte/resiliation", obstacles: [friction.title], at: 1_700_172_800_000 }
+]);
+assert.equal(journey.pages, 3);
+assert.equal(journey.obstacleSteps, 1);
+assert.deepEqual(journey.obstacles, [friction.title]);
+assert.equal(journey.lastAt - journey.firstAt, 172_800_000);
+
+console.log("Étapes de résiliation identifiées et résumées.");
