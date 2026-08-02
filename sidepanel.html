@@ -32,6 +32,7 @@
         <h2>Réglages</h2>
         <button class="icon-button small" id="closeSettingsButton" type="button" aria-label="Fermer les réglages">×</button>
       </div>
+      <div class="settings-group">
       <label class="switch-row">
         <span><strong>Signaux incertains</strong><small>Afficher aussi les détections à confiance modérée.</small></span>
         <input id="includeLowConfidence" type="checkbox" checked />
@@ -64,25 +65,13 @@
         <span><strong>Mémoriser les domaines analysés</strong><small>Sert uniquement à signaler une première visite. Rien ne sort du navigateur.</small></span>
         <input id="rememberSites" type="checkbox" checked />
       </label>
+      </div>
       <button class="text-button danger" id="clearHistoryButton" type="button">Effacer les données locales</button>
     </aside>
 
     <main>
       <section class="state state-welcome" id="welcomeState">
-        <div class="hero-illustration" aria-hidden="true">
-          <svg viewBox="0 0 180 140">
-            <rect x="21" y="23" width="138" height="94" rx="12" />
-            <path d="M21 45h138" />
-            <circle cx="36" cy="34" r="3" />
-            <circle cx="47" cy="34" r="3" />
-            <circle cx="58" cy="34" r="3" />
-            <rect x="39" y="62" width="56" height="9" rx="4.5" />
-            <rect x="39" y="80" width="92" height="6" rx="3" />
-            <rect x="39" y="93" width="68" height="6" rx="3" />
-            <circle cx="139" cy="96" r="26" />
-            <path d="M139 82v16m0 9v.3" />
-          </svg>
-        </div>
+        <div class="hero-illustration" aria-hidden="true"></div>
         <p class="eyebrow">Reprenez le contrôle</p>
         <h1>Cette page essaie-t-elle de vous influencer&nbsp;?</h1>
         <p class="intro">L’analyse repère les choix précochés, l’urgence artificielle, les boutons trompeurs et les obstacles à la résiliation. Elle vérifie aussi l’identité du domaine et la sécurité de la page.</p>

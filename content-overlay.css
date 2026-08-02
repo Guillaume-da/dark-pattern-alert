@@ -1,28 +1,32 @@
+/* Surlignage dans la page, aligné sur la palette du panneau. */
+
 :where(.dpa-alerted-element) {
-  outline: 3px solid #f59e0b !important;
+  outline: 2.5px solid #e8961a !important;
   outline-offset: 4px !important;
-  border-radius: 3px !important;
+  border-radius: 4px !important;
   transition: outline-color 160ms ease, box-shadow 160ms ease !important;
 }
 
 :where(.dpa-alerted-element[data-dpa-severity="high"]) {
-  outline-color: #ef4444 !important;
+  outline-color: #d0353a !important;
 }
 
 :where(.dpa-alerted-element[data-dpa-severity="low"]) {
-  outline-color: #38bdf8 !important;
+  outline-color: #8a8a8e !important;
 }
 
 :where(.dpa-focused-element) {
   animation: dpa-focus-pulse 700ms ease-in-out 2 !important;
-  box-shadow: 0 0 0 8px rgb(239 68 68 / 22%) !important;
+  box-shadow: 0 0 0 8px rgb(240 180 0 / 26%) !important;
 }
 
 @keyframes dpa-focus-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgb(239 68 68 / 30%);
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(240 180 0 / 34%);
   }
+
   50% {
-    box-shadow: 0 0 0 12px rgb(239 68 68 / 12%);
+    box-shadow: 0 0 0 12px rgb(240 180 0 / 12%);
   }
 }
