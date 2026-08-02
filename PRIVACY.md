@@ -28,7 +28,7 @@ La suppression de l’extension efface ces préférences et l’ensemble des don
 
 Pour toute question sur cette politique, pour exercer un droit prévu par le RGPD ou pour signaler un problème : **guillaume.dallolmo@gmail.com**.
 
-Le code source est public : <https://github.com/Guillaume-da/dark-pattern-alert>. Les affirmations de cette politique y sont vérifiables — aucune requête réseau n’est émise par l’extension, et les données citées sont celles écrites dans `chrome.storage.local`.
+Le code source est public et publié sous licence MIT : <https://github.com/Guillaume-da/dark-pattern-alert>. Les affirmations de cette politique y sont vérifiables — aucune requête réseau n’est émise par l’extension, et les données citées sont celles écrites dans `chrome.storage.local`.
 
 ## Modifications
 
