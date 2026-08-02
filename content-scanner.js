@@ -1,6 +1,14 @@
 (() => {
   if (globalThis.__darkPatternAlertScanner) return;
 
+  // `detector-rules.js` doit être injecté avant ce fichier : il porte les
+  // expressions de détection, partagées avec les tests exécutés sous Node.
+  const patterns = globalThis.__dpaDetectorRules?.patterns;
+  if (!patterns) {
+    console.warn("Dark Pattern Alert : detector-rules.js n’a pas été chargé, analyse annulée.");
+    return;
+  }
+
   const MAX_TEXT_NODES = 2600;
   const MAX_FINDINGS = 40;
   const HIGHLIGHT_CLASS = "dpa-alerted-element";
@@ -172,8 +180,7 @@
   };
 
   const scanPreselectedChoices = () => {
-    const sensitiveChoice =
-      /newsletter|marketing|partenaire|offre|promotion|assurance|garantie|don|tip|pourboire|abonnement|subscribe|renew|membership|communications?|emails?|sms/i;
+    const { sensitiveChoice } = patterns;
 
     for (const checkbox of document.querySelectorAll('input[type="checkbox"]')) {
       if (!checkbox.checked || checkbox.disabled || !isVisible(checkbox)) continue;
@@ -194,11 +201,14 @@
   };
 
   const scanUrgency = (textCandidates) => {
-    const timerPattern = /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b|\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i;
-    const urgencyPattern =
-      /expire|expiration|se termine|derni[eè]re chance|plus que|temps restant|offre limit[eé]e|\bvite\b|d[eé]p[eê]chez|\bleft\b|ends? in|last chance|limited time|\bhurry\b|deal ends/i;
-    const commercialPattern =
-      /panier|commande|paiement|checkout|acheter|prix|promo|r[eé]duction|order|payment|buy|discount|sale/i;
+    const {
+      timer: timerPattern,
+      urgency: urgencyPattern,
+      commercial: commercialPattern,
+      clock: clockPattern,
+      duration: durationPattern,
+      readingTime: readingTimePattern
+    } = patterns;
 
     const explicitTimers = document.querySelectorAll(
       '[role="timer"], time, [class*="countdown" i], [id*="countdown" i], [class*="timer" i], [id*="timer" i]'
@@ -211,10 +221,6 @@
 
     // « Temps de lecture : 3 min » n’est pas un décompte commercial, et son
     // icône porte souvent une classe contenant « timer ».
-    const readingTimePattern = /temps de lecture|min(?:ute)?s? de lecture|reading time|lecture\s*:\s*\d/i;
-    const clockPattern = /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b/;
-    const durationPattern = /\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i;
-
     for (const element of candidates) {
       if (!isVisible(element)) continue;
       const ownText = elementText(element);
@@ -254,8 +260,7 @@
       .filter(isVisible)
       .filter((element) => controlLabel(element).length > 0);
 
-    const confirmShaming =
-      /non merci.*(?:payer|[eé]conom|offre|avantage|argent|risque)|je pr[eé]f[eè]re.*(?:payer|rater|perdre|rester)|non.*je (?:n['’]en )?veux pas|no thanks.*(?:pay|save|offer|money)|i(?:'|’)d rather.*(?:pay|miss|lose)|i don(?:'|’)t want/i;
+    const { confirmShaming } = patterns;
 
     for (const control of controls) {
       const label = controlLabel(control);
@@ -274,10 +279,7 @@
       });
     }
 
-    const acceptPattern =
-      /^(tout accepter|accepter|j['’]?accepte|continuer|confirmer|oui|s['’]?abonner|acheter|commander|accept all|agree|continue|confirm|yes|subscribe|buy|place order)$/i;
-    const rejectPattern =
-      /^(refuser|tout refuser|non merci|plus tard|continuer sans|param[eè]tres|reject|decline|no thanks|not now|continue without|manage settings)$/i;
+    const { acceptControl: acceptPattern, rejectControl: rejectPattern } = patterns;
     const containers = [
       ...document.querySelectorAll(
         'form, dialog, [role="dialog"], [class*="modal" i], [class*="cookie" i], [id*="cookie" i], [class*="consent" i], [id*="consent" i]'
@@ -328,12 +330,11 @@
   };
 
   const scanCancellationFriction = (textCandidates) => {
-    const frictionPattern =
-      /(?:r[eé]sili(?:er|ation)|annuler (?:votre )?abonnement).{0,110}(?:appel(?:er)?|t[eé]l[eé]phon|contacter|service client|courrier|lettre recommand[eé]e)|(?:appel(?:er)?|t[eé]l[eé]phon|contacter|service client|courrier|lettre recommand[eé]e).{0,110}(?:r[eé]sili(?:er|ation)|annuler (?:votre )?abonnement)|(?:cancel(?:lation)?|end your subscription).{0,110}(?:call|phone|contact support|mail|letter)|(?:call|phone|contact support|mail a letter).{0,110}(?:cancel(?:lation)?|end your subscription)/i;
-    const autoRenewPattern =
-      /renouvel(?:lement|[eé]e?)\s+automatique|reconduit(?:e)?\s+automatiquement|automatically renew|auto[- ]?renew|charged automatically after|factur[eé].{0,50}(?:apr[eè]s|[àa] la fin).{0,40}(?:essai|p[eé]riode)/i;
-    const onlineBlockPattern =
-      /impossible de r[eé]silier en ligne|ne peut pas [eê]tre r[eé]sili[eé] en ligne|cannot (?:be )?cancel(?:led)? online|no online cancellation/i;
+    const {
+      cancellationFriction: frictionPattern,
+      autoRenew: autoRenewPattern,
+      onlineCancellationBlock: onlineBlockPattern
+    } = patterns;
 
     for (const element of textCandidates) {
       const text = elementText(element, 520);

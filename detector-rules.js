@@ -1,7 +1,15 @@
 (() => {
+  // Source unique des expressions de détection : `content-scanner.js` les lit
+  // depuis ce fichier et `test-rules.js` les vérifie sous Node. Toute copie
+  // locale finirait par diverger — c'est déjà arrivé.
   const patterns = {
     sensitiveChoice:
       /newsletter|marketing|partenaire|offre|promotion|assurance|garantie|don|tip|pourboire|abonnement|subscribe|renew|membership|communications?|emails?|sms/i,
+    // Forme horloge : un vrai décompte.
+    clock: /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b/,
+    // Forme durée : le plus souvent un temps de lecture ou de trajet.
+    duration: /\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i,
+    readingTime: /temps de lecture|min(?:ute)?s? de lecture|reading time|lecture\s*:\s*\d/i,
     timer:
       /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b|\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i,
     urgency:

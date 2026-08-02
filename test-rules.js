@@ -32,3 +32,11 @@ const extraNoMatch = [
 ];
 for (const [pattern, sample] of extraNoMatch) assert.doesNotMatch(sample, pattern);
 console.log(`${extraNoMatch.length} pièges de frontière de mot écartés.`);
+
+// Formes de compteur : l'horloge est un décompte, la durée non
+assert.match("00:09:42", patterns.clock);
+assert.doesNotMatch("3 min", patterns.clock);
+assert.match("3 min", patterns.duration);
+assert.match("Temps de lecture : 4 min", patterns.readingTime);
+assert.doesNotMatch("Plus que 2 min avant la fin de l'offre", patterns.readingTime);
+console.log("Formes horloge, durée et temps de lecture distinguées.");
