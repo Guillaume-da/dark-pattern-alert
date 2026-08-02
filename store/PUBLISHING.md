@@ -7,14 +7,19 @@ Ce document décrit **où cliquer, dans quel ordre, et ce qui bloque**.
 
 ## Avant de commencer
 
-| Prérequis | Détail |
-| --- | --- |
-| Compte Google | Celui qui possédera l’extension. Un transfert ultérieur est possible mais pénible : choisissez-le maintenant. |
-| Frais d’inscription | **5 $ US, une seule fois**, par compte développeur, non remboursables. |
-| Vérification d’identité | Google demande une adresse e-mail vérifiée, et parfois une pièce d’identité ou une adresse postale pour les comptes publiant en Europe. Comptez quelques jours si la vérification est déclenchée. |
-| Politique de confidentialité publique | `PRIVACY.md` du dépôt, **complété de vos coordonnées** (voir point 1 des blocages ci-dessous). |
+Le compte développeur existe déjà : les 5 $ d’inscription et la création de compte
+sont derrière vous. Restent quatre vérifications, dans l’onglet **Account**
+du tableau de bord.
 
-Inscription : <https://chrome.google.com/webstore/devconsole> → *Register as a developer*.
+| À vérifier | Pourquoi |
+| --- | --- |
+| Adresse e-mail de contact | Google la publie sur la fiche. Elle doit être **identique** à celle de `PRIVACY.md` — `guillaume.dallolmo+dpa@gmail.com` — sinon l’écart se remarque à l’examen. |
+| Statut de l’adresse | Elle doit apparaître comme *verified*. Une adresse non vérifiée bloque la soumission, sans toujours le dire clairement. |
+| Éditeur affiché | Le champ *Publisher name* est ce que verront les utilisateurs sous le nom de l’extension. Par défaut, Google y met le nom du compte Google. |
+| Vérification d’identité | Pour un éditeur situé dans l’Union européenne, le règlement sur les services numériques impose l’affichage de coordonnées de commerçant. Si Google ne l’a pas encore demandée, elle peut l’être au moment de la première soumission — pièce d’identité ou adresse postale, quelques jours de délai. |
+
+Politique de confidentialité à coller dans la fiche :
+<https://github.com/Guillaume-da/dark-pattern-alert/blob/main/PRIVACY.md>
 
 ---
 
@@ -80,10 +85,12 @@ Un onglet incomplet empêche la soumission et le bouton indique lequel.
 
 ## Ce qui bloque aujourd’hui
 
-1. **`PRIVACY.md` n’a pas de coordonnées d’éditeur.** Sa dernière phrase le dit
-   elle-même. Une politique sans moyen de contact est un motif de rejet fréquent.
-2. **Aucune adresse de contact vérifiée** n’est encore renseignée dans un compte
-   développeur — il n’y a pas encore de compte.
+1. ~~`PRIVACY.md` n’a pas de coordonnées d’éditeur.~~ **Réglé** : le fichier porte
+   une section « Contact » avec l’adresse `guillaume.dallolmo+dpa@gmail.com`.
+2. **Adresse de contact du compte développeur.** Le compte existe ; il reste à
+   confirmer que l’adresse qui y figure est bien `guillaume.dallolmo+dpa@gmail.com`
+   et qu’elle est vérifiée. C’est la seule chose que l’examen peut opposer à la
+   politique de confidentialité.
 3. **Version `0.1.0`.** Rien ne l’interdit, mais une première publication est
    généralement en `1.0.0`. Décidez avant de construire l’archive : le numéro
    figure dans son nom, et une version publiée ne peut jamais être réutilisée.

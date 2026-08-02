@@ -20,4 +20,16 @@ Lorsque l’option **Suivre les parcours de résiliation** est active, l’exten
 
 La permission `activeTab` donne un accès temporaire à la page ouverte après une action de l’utilisateur. La permission `scripting` permet d’y exécuter les détecteurs. La permission `sidePanel` affiche le rapport. La permission `storage` conserve les préférences locales.
 
-La suppression de l’extension efface ces préférences. Cette politique devra être complétée avec les coordonnées de l’éditeur avant une publication sur le Chrome Web Store.
+La suppression de l’extension efface ces préférences et l’ensemble des données locales décrites ci-dessus.
+
+## Contact
+
+Éditeur : Guillaume Dall’Olmo.
+
+Pour toute question sur cette politique, pour exercer un droit prévu par le RGPD ou pour signaler un problème : **guillaume.dallolmo+dpa@gmail.com**.
+
+Le code source est public : <https://github.com/Guillaume-da/dark-pattern-alert>. Les affirmations de cette politique y sont vérifiables — aucune requête réseau n’est émise par l’extension, et les données citées sont celles écrites dans `chrome.storage.local`.
+
+## Modifications
+
+Toute évolution de cette politique sera publiée dans ce fichier, dont l’historique est consultable dans le dépôt. La date de dernière mise à jour figure en tête.
