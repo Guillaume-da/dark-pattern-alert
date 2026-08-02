@@ -1062,3 +1062,54 @@ input:focus-visible {
   font-size: 10px;
   line-height: 1.5;
 }
+
+/* Retours de l’utilisateur sur un signal */
+
+.feedback-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.feedback-status {
+  flex: 1;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.feedback-button {
+  cursor: pointer;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.feedback-button:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.finding-card[data-dismissed="true"] {
+  opacity: 0.55;
+}
+
+.dismissed-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 11px;
+}

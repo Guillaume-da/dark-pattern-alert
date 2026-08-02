@@ -113,3 +113,19 @@ assert.ok(calculateScore(withHigh) > calculateScore(withLow));
 assert.equal(calculateScore([]), 0);
 
 console.log("Décomptes lus et comparés entre deux visites.");
+
+// Empreinte d'un signal : stable malgré les chiffres qui changent
+const { findingSignature } = require("./detector-rules.js");
+const base = { category: "urgency", title: "Compteur d’urgence à vérifier", evidence: "00:09:42" };
+assert.equal(findingSignature(base), findingSignature({ ...base, evidence: "00:03:11" }));
+assert.notEqual(findingSignature(base), findingSignature({ ...base, category: "cost" }));
+assert.notEqual(
+  findingSignature({ category: "cost", title: "Frais ajoutés au prix annoncé", evidence: "Frais de service 4,90 €" }),
+  findingSignature({ category: "cost", title: "Prix annoncé sans les frais", evidence: "Frais de service 4,90 €" })
+);
+// Un montant qui change ne crée pas un nouveau signal
+assert.equal(
+  findingSignature({ category: "cost", title: "Frais ajoutés", evidence: "Frais de service 4,90 €" }),
+  findingSignature({ category: "cost", title: "Frais ajoutés", evidence: "Frais de service 7,20 €" })
+);
+console.log("Empreintes de signaux vérifiées.");

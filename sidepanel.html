@@ -53,6 +53,10 @@
         <input id="compareCounters" type="checkbox" checked />
       </label>
       <label class="switch-row">
+        <span><strong>Tenir compte de mes retours</strong><small>Écarter des prochains rapports les signaux que vous jugez faux, site par site.</small></span>
+        <input id="useFeedback" type="checkbox" checked />
+      </label>
+      <label class="switch-row">
         <span><strong>Mémoriser les domaines analysés</strong><small>Sert uniquement à signaler une première visite. Rien ne sort du navigateur.</small></span>
         <input id="rememberSites" type="checkbox" checked />
       </label>
@@ -174,6 +178,11 @@
           <span id="visibleCount"></span>
         </div>
         <div class="findings-list" id="findingsList"></div>
+
+        <p class="dismissed-note" id="dismissedNote" hidden>
+          <span id="dismissedCount"></span>
+          <button class="text-button" id="toggleDismissed" type="button">Afficher</button>
+        </p>
 
         <div class="empty-results" id="emptyResults" hidden>
           <div aria-hidden="true">✓</div>

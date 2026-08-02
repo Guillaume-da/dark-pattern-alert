@@ -155,7 +155,12 @@ const renderResults = async (page, report) => {
       const footer = document.createElement("div");
       footer.className = "finding-footer";
       footer.innerHTML = `<span class="confidence">Confiance ${Math.round(finding.confidence * 100)} %</span><span class="locate-button">Voir dans la page →</span>`;
-      card.append(topline, title, detail, evidence, footer);
+      const feedback = document.createElement("div");
+      feedback.className = "feedback-row";
+      feedback.innerHTML =
+        '<span class="feedback-status">Ce signal est-il juste ?</span><span class="feedback-button">Oui</span><span class="feedback-button">Non, l’écarter</span>';
+
+      card.append(topline, title, detail, evidence, footer, feedback);
       list.append(card);
     });
     select("#visibleCount").textContent = `${data.findings.length} affichés`;
