@@ -175,7 +175,25 @@ Le thème se choisit aussi par `--scheme=light|dark|both` ou par `DPA_SCHEME`. L
 | `media-ownership.js` | table d’actionnariat et de financement des médias, et sa recherche par domaine |
 | `detector-rules.js` | source unique des expressions de détection, lue par le scanner et vérifiée par les tests |
 
+Les scripts de `scripts/` ne sont jamais embarqués dans l'extension : ils produisent les captures, les icônes, les visuels de la fiche et l'archive.
+
 Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`) permet de tester tout le raisonnement sous Node, sans navigateur.
+
+## Publication
+
+Tout le nécessaire pour le Chrome Web Store est dans [`store/`](store/) :
+
+- [`store/LISTING.md`](store/LISTING.md) — le texte de chaque champ, prêt à coller, avec son compte de caractères, les justifications de permission et les déclarations de confidentialité ;
+- [`store/PUBLISHING.md`](store/PUBLISHING.md) — la marche à suivre, ce qui bloque encore, et les motifs de rejet qui guettent ce projet en particulier ;
+- `store/assets/` — les cinq captures 1280 × 800, la tuile 440 × 280 et la bannière 1440 × 560.
+
+```sh
+npm run package        # archive à téléverser, fichiers exécutés uniquement
+npm run store:assets   # visuels de la fiche
+npm run icons          # icônes 16/32/48/128
+```
+
+`npm run package` refuse de produire l'archive si le résumé dépasse 132 caractères, si le nom dépasse 75, ou si une taille d'icône manque au manifeste.
 
 ## Limites assumées
 
