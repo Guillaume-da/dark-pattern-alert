@@ -205,6 +205,24 @@ const renderResults = async (page, report) => {
 
     await panel.locator("#trustCard").screenshot({ path: path.join(outputRoot, "05-site-reputation.png") });
 
+    // La page de démonstration n'est pas un média : la carte éditeur est
+    // illustrée à part, sur un titre réellement présent dans la table.
+    await panel.evaluate(() => {
+      const media = globalThis.__dpaMediaOwnership.lookupMedia("https://www.lemonde.fr/politique/");
+      const card = document.querySelector("#mediaCard");
+      card.hidden = false;
+      card.dataset.type = media.type;
+      document.querySelector("#mediaEyebrow").textContent = "Article de presse";
+      document.querySelector("#mediaName").textContent = media.name;
+      document.querySelector("#mediaType").textContent = media.typeLabel;
+      document.querySelector("#mediaOwner").textContent = media.owner;
+      document.querySelector("#mediaGroup").textContent = media.group;
+      document.querySelector("#mediaFunding").textContent = media.funding;
+      document.querySelector("#mediaNote").textContent =
+        `Faits d’actionnariat et de financement, arrêtés en ${media.snapshot}. Aucune appréciation de la ligne éditoriale, aucun effet sur les scores ci-dessus. L’actionnariat des médias change souvent : vérifiez avant de conclure.`;
+    });
+    await panel.locator("#mediaCard").screenshot({ path: path.join(outputRoot, "07-media-ownership.png") });
+
     await panel.evaluate(() => {
       document.querySelector("#settingsPanel").hidden = false;
       document.querySelector("#settingsButton").setAttribute("aria-expanded", "true");

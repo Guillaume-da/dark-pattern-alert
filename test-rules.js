@@ -24,3 +24,11 @@ for (const [pattern, sample] of shouldMatch) assert.match(sample, pattern);
 for (const [pattern, sample] of shouldNotMatch) assert.doesNotMatch(sample, pattern);
 
 console.log(`${shouldMatch.length + shouldNotMatch.length} règles vérifiées avec succès.`);
+
+const extraNoMatch = [
+  [patterns.urgency, "Les conseils de l'IA pour éviter le blues de la rentrée"],
+  [patterns.urgency, "Il roulait à vitesse réduite"],
+  [patterns.urgency, "Leftover budget for next year"]
+];
+for (const [pattern, sample] of extraNoMatch) assert.doesNotMatch(sample, pattern);
+console.log(`${extraNoMatch.length} pièges de frontière de mot écartés.`);

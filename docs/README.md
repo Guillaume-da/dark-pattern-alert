@@ -32,6 +32,12 @@ La carte de confiance ouvre le rapport et détaille chaque vérification : ident
 
 ![Carte de réputation et de sécurité](screenshots/05-site-reputation.png)
 
+## Éditeur et financement
+
+Sur les sites de presse répertoriés, une carte indique qui possède le titre et comment il est financé. Aucune appréciation de la ligne éditoriale, aucun effet sur les scores.
+
+![Carte éditeur et financement](screenshots/07-media-ownership.png)
+
 ## Réglages
 
 Les quatre réglages tiennent dans un seul panneau, dont l’analyse de sécurité et la mémorisation des domaines analysés, effaçable d’un clic.
@@ -40,4 +46,4 @@ Les quatre réglages tiennent dans un seul panneau, dont l’analyse de sécurit
 
 ## Régénérer les captures
 
-`npm run capture` recrée les six images avec le Chromium de Playwright, `npm run capture:system-chrome` avec un Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.
+`npm run capture` recrée les sept images avec le Chromium de Playwright, `npm run capture:system-chrome` avec un Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.

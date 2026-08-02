@@ -5,7 +5,7 @@
     timer:
       /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b|\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i,
     urgency:
-      /expire|expiration|se termine|derni[eè]re chance|plus que|temps restant|offre limit[eé]e|vite|d[eé]p[eê]chez|left|ends? in|last chance|limited time|hurry|deal ends/i,
+      /expire|expiration|se termine|derni[eè]re chance|plus que|temps restant|offre limit[eé]e|\bvite\b|d[eé]p[eê]chez|\bleft\b|ends? in|last chance|limited time|\bhurry\b|deal ends/i,
     commercial:
       /panier|commande|paiement|checkout|acheter|prix|promo|r[eé]duction|order|payment|buy|discount|sale/i,
     confirmShaming:

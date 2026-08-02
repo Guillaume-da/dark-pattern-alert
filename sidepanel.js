@@ -12,6 +12,15 @@ const els = {
   includeLowConfidence: document.querySelector("#includeLowConfidence"),
   autoHighlight: document.querySelector("#autoHighlight"),
   securityAnalysis: document.querySelector("#securityAnalysis"),
+  mediaOwnership: document.querySelector("#mediaOwnership"),
+  mediaCard: document.querySelector("#mediaCard"),
+  mediaEyebrow: document.querySelector("#mediaEyebrow"),
+  mediaName: document.querySelector("#mediaName"),
+  mediaType: document.querySelector("#mediaType"),
+  mediaOwner: document.querySelector("#mediaOwner"),
+  mediaGroup: document.querySelector("#mediaGroup"),
+  mediaFunding: document.querySelector("#mediaFunding"),
+  mediaNote: document.querySelector("#mediaNote"),
   rememberSites: document.querySelector("#rememberSites"),
   clearHistoryButton: document.querySelector("#clearHistoryButton"),
   trustCard: document.querySelector("#trustCard"),
@@ -47,6 +56,8 @@ const els = {
 const state = {
   report: null,
   trust: null,
+  media: null,
+  facts: null,
   activeTabId: null,
   filter: "all",
   loadingTimer: null,
@@ -100,6 +111,7 @@ const persistSettings = async () => {
       includeLowConfidence: els.includeLowConfidence.checked,
       autoHighlight: els.autoHighlight.checked,
       securityAnalysis: els.securityAnalysis.checked,
+      mediaOwnership: els.mediaOwnership.checked,
       rememberSites: els.rememberSites.checked
     }
   });
@@ -111,6 +123,7 @@ const loadSettings = async () => {
   els.includeLowConfidence.checked = dpaSettings.includeLowConfidence !== false;
   els.autoHighlight.checked = dpaSettings.autoHighlight !== false;
   els.securityAnalysis.checked = dpaSettings.securityAnalysis !== false;
+  els.mediaOwnership.checked = dpaSettings.mediaOwnership !== false;
   els.rememberSites.checked = dpaSettings.rememberSites !== false;
   els.highlightToggle.checked = els.autoHighlight.checked;
 };
@@ -209,6 +222,9 @@ const runScan = async () => {
 
     state.report = response.report;
     state.trust = await runSecurityAnalysis(tab);
+    state.media = els.mediaOwnership.checked
+      ? globalThis.__dpaMediaOwnership.lookupMedia(response.report.url || tab.url)
+      : null;
     state.filter = "all";
     els.highlightToggle.checked = els.autoHighlight.checked;
     renderReport();
@@ -237,6 +253,7 @@ const runSecurityAnalysis = async (tab) => {
     const response = await chrome.tabs.sendMessage(tab.id, { type: "DPA_SITE_FACTS" });
     if (!response?.ok || !response.facts) throw new Error(response?.error || "Sonde indisponible");
 
+    state.facts = response.facts;
     const firstVisit = await rememberHost(response.facts.hostname);
     return globalThis.__dpaReputationRules.buildTrustReport({
       url: response.facts.url || tab.url,
@@ -303,8 +320,26 @@ const renderReport = () => {
   els.scoreSummary.textContent = scoreInfo.summary;
 
   renderTrust();
+  renderMedia();
   renderFilters();
   renderFindings();
+};
+
+// Carte purement informative : elle décrit qui possède le média et comment il
+// est financé, sans porter de jugement éditorial et sans peser sur les scores.
+const renderMedia = () => {
+  const media = state.media;
+  els.mediaCard.hidden = !media;
+  if (!media) return;
+
+  els.mediaEyebrow.textContent = state.facts?.isArticle ? "Article de presse" : "Média identifié";
+  els.mediaName.textContent = media.name;
+  els.mediaType.textContent = media.typeLabel;
+  els.mediaCard.dataset.type = media.type;
+  els.mediaOwner.textContent = media.owner;
+  els.mediaGroup.textContent = media.group;
+  els.mediaFunding.textContent = media.funding;
+  els.mediaNote.textContent = `Faits d’actionnariat et de financement, arrêtés en ${media.snapshot}. Aucune appréciation de la ligne éditoriale, aucun effet sur les scores ci-dessus. L’actionnariat des médias change souvent : vérifiez avant de conclure.`;
 };
 
 const TRUST_BADGES = { trusted: "✓", caution: "!", risky: "⚠" };
@@ -466,6 +501,18 @@ const reportAsText = () => {
     ""
   ];
 
+  if (state.media) {
+    const { media } = state;
+    lines.push(
+      `ÉDITEUR — ${media.name} (${media.typeLabel})`,
+      `   Propriétaire : ${media.owner}`,
+      `   Groupe : ${media.group}`,
+      `   Financement : ${media.funding}`,
+      `   Faits arrêtés en ${media.snapshot}, sans appréciation de la ligne éditoriale.`,
+      ""
+    );
+  }
+
   if (trust) {
     lines.push(`RÉPUTATION ET SÉCURITÉ — ${trust.score}/100 · ${trust.label}`);
     for (const item of trust.signals) {
@@ -504,6 +551,7 @@ els.closeSettingsButton.addEventListener("click", () => {
 
 els.includeLowConfidence.addEventListener("change", persistSettings);
 els.securityAnalysis.addEventListener("change", persistSettings);
+els.mediaOwnership.addEventListener("change", persistSettings);
 els.rememberSites.addEventListener("change", persistSettings);
 
 els.trustToggle.addEventListener("click", () => {

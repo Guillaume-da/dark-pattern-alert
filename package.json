@@ -4,7 +4,7 @@
   "private": true,
   "description": "Extension Chrome qui repère les interfaces trompeuses et évalue la réputation du site, entièrement en local.",
   "scripts": {
-    "test": "node test-rules.js && node test-reputation.js",
+    "test": "node test-rules.js && node test-reputation.js && node test-media.js",
     "capture": "node scripts/capture-docs.cjs",
     "capture:system-chrome": "node scripts/capture-docs-with-system-chrome.cjs"
   },

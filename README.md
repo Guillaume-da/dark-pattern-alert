@@ -61,6 +61,20 @@ Chaque détection porte une **sévérité**, un **niveau de confiance** et l’e
 
 Le score de confiance part de 100 et descend selon les signaux trouvés : **≥ 80** aucun signal d’alerte, **55–79** prudence recommandée, **< 55** signaux préoccupants.
 
+### 3. Éditeur et financement, sur les sites de presse
+
+<table>
+  <tr>
+    <td width="46%"><img src="docs/screenshots/07-media-ownership.png" alt="Carte éditeur et financement" /></td>
+    <td width="54%" valign="top">
+      <p>Sur les médias répertoriés (~70 titres français et internationaux), le panneau indique <strong>qui possède le titre</strong>, à quel groupe il appartient et <strong>comment il est financé</strong> : capitaux privés, service public, coopérative, association, fonds de dotation.</p>
+      <p>Ces informations sont <strong>strictement factuelles</strong>. L’extension ne classe aucun média sur un axe politique et ne note pas sa ligne éditoriale : elle donne de quoi se faire soi-même une opinion. La carte n’entre dans aucun score.</p>
+    </td>
+  </tr>
+</table>
+
+Les données sont un instantané daté, embarqué dans `media-ownership.js`. L’actionnariat des médias change souvent : la carte affiche sa date d’arrêt et invite à vérifier.
+
 ## Le rapport
 
 <table>
@@ -121,6 +135,7 @@ npm run capture:system-chrome   # idem, avec un Chrome déjà installé
 | `content-overlay.css` | encadre les éléments signalés |
 | `site-probe.js` | relève les faits de sécurité observables, sans les interpréter |
 | `reputation-rules.js` | calcule le score de confiance ; logique pure, testable hors navigateur |
+| `media-ownership.js` | table d’actionnariat et de financement des médias, et sa recherche par domaine |
 | `detector-rules.js` | expressions de détection partagées avec les tests |
 
 Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`) permet de tester tout le raisonnement sous Node, sans navigateur.
@@ -132,6 +147,7 @@ Les résultats sont des **indices explicables, pas des preuves**.
 - Un compteur ne peut pas être qualifié de faux à partir d’un seul instantané : l’extension invite à le vérifier plutôt qu’à conclure.
 - Les contenus rendus dans des iframes ou des composants fermés échappent à l’analyse.
 - Sans base de signalements ni WHOIS, l’analyse de réputation ignore l’âge du domaine et les campagnes d’hameçonnage en cours. **Un score de 100 signifie « rien d’anormal détectable localement », pas « site vérifié ».**
+- La table des médias est un instantané embarqué : un rachat récent n’y figure pas, et un titre absent de la liste n’affiche aucune carte. Elle décrit l’actionnariat, jamais l’indépendance réelle d’une rédaction.
 - La liste de marques est restreinte et le domaine enregistré est extrait avec une table de suffixes abrégée : des imitations passent, et un domaine légitime portant un nom de marque (filiale, revendeur) peut être signalé à tort.
 
 ## Prochaines étapes produit

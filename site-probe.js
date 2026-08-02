@@ -174,6 +174,9 @@
       protocol: location.protocol,
       secureContext: window.isSecureContext === true,
       title: document.title,
+      isArticle:
+        document.querySelector('meta[property="og:type"][content="article" i]') !== null ||
+        document.querySelector('article, [itemtype*="NewsArticle" i]') !== null,
       passwordFields,
       paymentFields,
       commercePage: COMMERCE_HINT.test(bodyText),
