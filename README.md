@@ -42,6 +42,8 @@ Chrome 114 minimum (API `sidePanel`).
 
 Chaque détection porte une **sévérité**, un **niveau de confiance** et l’extrait de page qui l’a déclenchée. Le bouton « Voir dans la page » fait défiler jusqu’à l’élément et l’encadre.
 
+Chaque signal peut être jugé : **« Oui »** ou **« Non, l’écarter »**. Un signal écarté disparaît des prochains rapports **sur ce site**, cesse de peser sur le score, et reste consultable derrière « Afficher ». Le jugement est réversible, tient compte des chiffres qui changent — un compteur ou un montant différent reste le même signal — et ne quitte jamais le navigateur : il n’alimente aucune base partagée.
+
 #### Compteurs : la comparaison entre deux visites
 
 Un décompte ne peut pas être qualifié de faux sur un seul instantané. L’extension relève donc sa valeur, localement, et la confronte à la visite suivante :
@@ -115,6 +117,7 @@ Les éléments signalés sont encadrés directement dans la page :
       <p>L’extension demande <code>activeTab</code>, <code>scripting</code>, <code>sidePanel</code> et <code>storage</code> — rien de plus. Elle n’observe pas la navigation en arrière-plan et n’ouvre aucune connexion réseau.</p>
       <p><strong>Mémoriser les domaines analysés</strong> conserve au plus 500 noms de domaine sur lesquels une analyse a été explicitement lancée, uniquement pour signaler une première visite. Ni URL complète, ni horodatage, ni contenu de page. Désactivable avant toute analyse, effaçable d’un clic.</p>
       <p><strong>Comparer les compteurs</strong> conserve, pour au plus 200 pages portant un décompte, l’adresse sans paramètres, la valeur relevée et sa date. C’est ce qui permet de dire « ce compteur s’est réarmé » plutôt que « ce compteur est peut-être faux ». Même bouton d’effacement.</p>
+      <p><strong>Tenir compte de mes retours</strong> conserve, pour au plus 300 sites, les signaux que vous avez confirmés ou écartés — sous forme d’empreinte, sans contenu de page. Même bouton d’effacement.</p>
     </td>
   </tr>
 </table>

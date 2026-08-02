@@ -14,6 +14,10 @@ const els = {
   securityAnalysis: document.querySelector("#securityAnalysis"),
   mediaOwnership: document.querySelector("#mediaOwnership"),
   compareCounters: document.querySelector("#compareCounters"),
+  useFeedback: document.querySelector("#useFeedback"),
+  dismissedNote: document.querySelector("#dismissedNote"),
+  dismissedCount: document.querySelector("#dismissedCount"),
+  toggleDismissed: document.querySelector("#toggleDismissed"),
   mediaCard: document.querySelector("#mediaCard"),
   mediaEyebrow: document.querySelector("#mediaEyebrow"),
   mediaName: document.querySelector("#mediaName"),
@@ -59,6 +63,9 @@ const state = {
   trust: null,
   media: null,
   facts: null,
+  feedback: {},
+  feedbackHost: "",
+  showDismissed: false,
   activeTabId: null,
   filter: "all",
   loadingTimer: null,
@@ -69,6 +76,8 @@ const KNOWN_HOSTS_KEY = "dpaKnownHosts";
 const KNOWN_HOSTS_LIMIT = 500;
 const COUNTERS_KEY = "dpaCounters";
 const COUNTERS_PAGE_LIMIT = 200;
+const FEEDBACK_KEY = "dpaFeedback";
+const FEEDBACK_HOST_LIMIT = 300;
 
 // Verdicts rendus par la comparaison entre deux visites. Un décompte honnête
 // perd exactement le temps écoulé ; les autres cas sont des constats, plus
@@ -183,6 +192,7 @@ const persistSettings = async () => {
       securityAnalysis: els.securityAnalysis.checked,
       mediaOwnership: els.mediaOwnership.checked,
       compareCounters: els.compareCounters.checked,
+      useFeedback: els.useFeedback.checked,
       rememberSites: els.rememberSites.checked
     }
   });
@@ -196,6 +206,7 @@ const loadSettings = async () => {
   els.securityAnalysis.checked = dpaSettings.securityAnalysis !== false;
   els.mediaOwnership.checked = dpaSettings.mediaOwnership !== false;
   els.compareCounters.checked = dpaSettings.compareCounters !== false;
+  els.useFeedback.checked = dpaSettings.useFeedback !== false;
   els.rememberSites.checked = dpaSettings.rememberSites !== false;
   els.highlightToggle.checked = els.autoHighlight.checked;
 };
@@ -295,6 +306,7 @@ const runScan = async () => {
 
     state.report = response.report;
     await applyCounterHistory(state.report);
+    await applyFeedback(state.report);
     state.trust = await runSecurityAnalysis(tab);
     state.media = els.mediaOwnership.checked
       ? globalThis.__dpaMediaOwnership.lookupMedia(response.report.url || tab.url)
@@ -365,6 +377,71 @@ const applyCounterHistory = async (report) => {
   await chrome.storage.local.set({ [COUNTERS_KEY]: trimmed });
 };
 
+// Retours de l’utilisateur sur un signal, conservés par site. Ils ne servent
+// qu’à lui : un signal écarté ici disparaît de ses prochains rapports sur ce
+// site, sans rien remonter à personne.
+const feedbackHost = (url = "") => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+};
+
+const readFeedbackStore = async () => {
+  const stored = await chrome.storage.local.get(FEEDBACK_KEY);
+  return stored[FEEDBACK_KEY] && typeof stored[FEEDBACK_KEY] === "object" ? stored[FEEDBACK_KEY] : {};
+};
+
+const applyFeedback = async (report) => {
+  state.feedback = {};
+  state.feedbackHost = "";
+  state.showDismissed = false;
+
+  const { findingSignature } = globalThis.__dpaDetectorRules;
+  for (const finding of report.findings) finding.signature = findingSignature(finding);
+
+  if (!els.useFeedback.checked) return;
+  const host = feedbackHost(report.url);
+  if (!host) return;
+
+  const all = await readFeedbackStore();
+  state.feedbackHost = host;
+  state.feedback = all[host] || {};
+  for (const finding of report.findings) {
+    finding.feedback = state.feedback[finding.signature]?.verdict || null;
+  }
+};
+
+const recordFeedback = async (finding, verdict) => {
+  if (!state.feedbackHost) return;
+
+  const all = await readFeedbackStore();
+  const forHost = { ...(all[state.feedbackHost] || {}) };
+  if (verdict) {
+    forHost[finding.signature] = { verdict, at: Date.now() };
+  } else {
+    delete forHost[finding.signature];
+  }
+
+  const merged = { ...all, [state.feedbackHost]: forHost };
+  const trimmed = Object.fromEntries(Object.entries(merged).slice(-FEEDBACK_HOST_LIMIT));
+  await chrome.storage.local.set({ [FEEDBACK_KEY]: trimmed });
+
+  state.feedback = forHost;
+  finding.feedback = verdict;
+  renderReport();
+  showToast(
+    verdict === "wrong"
+      ? "Signal écarté sur ce site"
+      : verdict === "useful"
+        ? "Signal confirmé"
+        : "Retour retiré"
+  );
+};
+
+const retainedFindings = () => state.report.findings.filter((finding) => finding.feedback !== "wrong");
+
 // L’analyse de réputation reste locale : identité du domaine, transport et
 // formulaires de la page. Aucun service externe n’est interrogé.
 const runSecurityAnalysis = async (tab) => {
@@ -426,8 +503,12 @@ const renderReport = () => {
   if (!state.report) return;
   const { report } = state;
   const hostname = safeHostname(report);
-  const count = report.findings.length;
-  const scoreInfo = scorePresentation(report.score);
+  const retained = retainedFindings();
+  const count = retained.length;
+  // Un signal écarté par l’utilisateur ne pèse plus sur le score.
+  const score = globalThis.__dpaDetectorRules.calculateScore(retained);
+  report.score = score;
+  const scoreInfo = scorePresentation(score);
 
   els.siteName.textContent = hostname || report.title || "Page analysée";
   els.siteAvatar.textContent = (hostname || "?").charAt(0);
@@ -505,13 +586,13 @@ const renderTrust = () => {
 
 const renderFilters = () => {
   els.filters.replaceChildren();
-  const counts = state.report.findings.reduce((accumulator, finding) => {
+  const counts = retainedFindings().reduce((accumulator, finding) => {
     accumulator[finding.category] = (accumulator[finding.category] || 0) + 1;
     return accumulator;
   }, {});
 
   const available = [
-    { id: "all", label: `Tous · ${state.report.findings.length}` },
+    { id: "all", label: `Tous · ${retainedFindings().length}` },
     ...Object.entries(counts).map(([id, count]) => ({
       id,
       label: `${categoryPresentation[id]?.label || id} · ${count}`
@@ -579,25 +660,76 @@ const createFindingCard = (finding) => {
   footer.append(confidence, locate);
 
   card.append(topline, title, detail, evidence, footer);
+
+  if (els.useFeedback.checked && state.feedbackHost) {
+    card.append(createFeedbackRow(finding));
+  }
   return card;
+};
+
+const createFeedbackRow = (finding) => {
+  const row = document.createElement("div");
+  row.className = "feedback-row";
+
+  if (finding.feedback) {
+    const status = document.createElement("span");
+    status.className = "feedback-status";
+    status.textContent =
+      finding.feedback === "wrong" ? "Écarté sur ce site" : "Confirmé par vous";
+    const undo = document.createElement("button");
+    undo.type = "button";
+    undo.className = "feedback-button";
+    undo.textContent = "Annuler";
+    undo.addEventListener("click", () => recordFeedback(finding, null));
+    row.append(status, undo);
+    return row;
+  }
+
+  const question = document.createElement("span");
+  question.className = "feedback-status";
+  question.textContent = "Ce signal est-il juste ?";
+
+  const useful = document.createElement("button");
+  useful.type = "button";
+  useful.className = "feedback-button";
+  useful.textContent = "Oui";
+  useful.addEventListener("click", () => recordFeedback(finding, "useful"));
+
+  const wrong = document.createElement("button");
+  wrong.type = "button";
+  wrong.className = "feedback-button";
+  wrong.textContent = "Non, l’écarter";
+  wrong.addEventListener("click", () => recordFeedback(finding, "wrong"));
+
+  row.append(question, useful, wrong);
+  return row;
 };
 
 const renderFindings = () => {
   els.findingsList.replaceChildren();
-  const findings = state.report.findings.filter(
-    (finding) => state.filter === "all" || finding.category === state.filter
-  );
+  const dismissed = state.report.findings.filter((finding) => finding.feedback === "wrong");
+  const pool = state.showDismissed ? state.report.findings : retainedFindings();
+  const findings = pool.filter((finding) => state.filter === "all" || finding.category === state.filter);
 
   for (const finding of findings) {
-    els.findingsList.append(createFindingCard(finding));
+    const card = createFindingCard(finding);
+    if (finding.feedback === "wrong") card.dataset.dismissed = "true";
+    els.findingsList.append(card);
   }
 
-  const hasAny = state.report.findings.length > 0;
+  const hasAny = retainedFindings().length > 0 || (state.showDismissed && findings.length > 0);
   els.findingsHeading.hidden = !hasAny;
   els.filters.hidden = !hasAny;
   els.emptyResults.hidden = hasAny;
   els.disclaimer.hidden = !hasAny;
   els.visibleCount.textContent = `${findings.length} affiché${findings.length > 1 ? "s" : ""}`;
+
+  els.dismissedNote.hidden = dismissed.length === 0;
+  els.dismissedCount.textContent =
+    dismissed.length > 1
+      ? `${dismissed.length} signaux écartés par vous sur ce site`
+      : `${dismissed.length} signal écarté par vous sur ce site`;
+  els.toggleDismissed.textContent = state.showDismissed ? "Masquer" : "Afficher";
 };
 
 const sendToActivePage = async (message) => {
@@ -678,6 +810,12 @@ els.includeLowConfidence.addEventListener("change", persistSettings);
 els.securityAnalysis.addEventListener("change", persistSettings);
 els.mediaOwnership.addEventListener("change", persistSettings);
 els.compareCounters.addEventListener("change", persistSettings);
+els.useFeedback.addEventListener("change", persistSettings);
+
+els.toggleDismissed.addEventListener("click", () => {
+  state.showDismissed = !state.showDismissed;
+  renderFindings();
+});
 els.rememberSites.addEventListener("change", persistSettings);
 
 els.trustToggle.addEventListener("click", () => {
@@ -687,7 +825,7 @@ els.trustToggle.addEventListener("click", () => {
 });
 
 els.clearHistoryButton.addEventListener("click", async () => {
-  await chrome.storage.local.remove([KNOWN_HOSTS_KEY, COUNTERS_KEY]);
+  await chrome.storage.local.remove([KNOWN_HOSTS_KEY, COUNTERS_KEY, FEEDBACK_KEY]);
   showToast("Données locales effacées");
 });
 

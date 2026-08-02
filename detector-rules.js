@@ -121,8 +121,23 @@
     return Math.min(100, Math.round(base + categoryBonus));
   };
 
+  // Empreinte d'un signal, stable d'une visite à l'autre : les chiffres sont
+  // neutralisés pour qu'un décompte ou un montant qui change reste le même
+  // signal aux yeux de l'utilisateur qui l'a jugé.
+  const findingSignature = (finding = {}) => {
+    const normalize = (value = "") =>
+      String(value)
+        .toLowerCase()
+        .replace(/\d+/g, "#")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+    return [finding.category || "?", normalize(finding.title), normalize(finding.evidence)].join("::");
+  };
+
   const rules = Object.freeze({
     patterns: Object.freeze(patterns),
+    findingSignature,
     parseAmount,
     parseCountdown,
     compareCounter,
