@@ -22,6 +22,10 @@
 
   const compact = (value = "") =>
     String(value)
+      // Certaines pages exposent du balisage sous forme de texte (contenu de
+      // noscript, gabarits de chargement diff\u00e9r\u00e9) : il ne doit ni d\u00e9clencher
+      // une d\u00e9tection ni se retrouver cit\u00e9 comme preuve.
+      .replace(/<[^>]{1,300}>/g, " ")
       .replace(/\s+/g, " ")
       .replace(/\u00a0/g, " ")
       .trim();
@@ -192,7 +196,7 @@
   const scanUrgency = (textCandidates) => {
     const timerPattern = /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b|\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i;
     const urgencyPattern =
-      /expire|expiration|se termine|derni[eè]re chance|plus que|temps restant|offre limit[eé]e|vite|d[eé]p[eê]chez|left|ends? in|last chance|limited time|hurry|deal ends/i;
+      /expire|expiration|se termine|derni[eè]re chance|plus que|temps restant|offre limit[eé]e|\bvite\b|d[eé]p[eê]chez|\bleft\b|ends? in|last chance|limited time|\bhurry\b|deal ends/i;
     const commercialPattern =
       /panier|commande|paiement|checkout|acheter|prix|promo|r[eé]duction|order|payment|buy|discount|sale/i;
 
@@ -205,13 +209,28 @@
       if (timerPattern.test(text)) candidates.add(element);
     }
 
+    // « Temps de lecture : 3 min » n’est pas un décompte commercial, et son
+    // icône porte souvent une classe contenant « timer ».
+    const readingTimePattern = /temps de lecture|min(?:ute)?s? de lecture|reading time|lecture\s*:\s*\d/i;
+    const clockPattern = /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b/;
+    const durationPattern = /\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i;
+
     for (const element of candidates) {
       if (!isVisible(element)) continue;
       const ownText = elementText(element);
+      // Un compteur affiche lui-même son décompte. Sans cette exigence, une
+      // icône décorative suffisait à signaler toute la carte qui l’entoure.
+      const hasClock = clockPattern.test(ownText);
+      const hasDuration = durationPattern.test(ownText);
+      if (!hasClock && !hasDuration) continue;
       const context = nearbyText(element);
+      if (readingTimePattern.test(context)) continue;
       const marker = lower(`${element.id} ${element.className || ""} ${element.getAttribute("role") || ""}`);
       const explicitMarker = /countdown|timer/.test(marker) || element.getAttribute("role") === "timer";
-      if (!timerPattern.test(`${ownText} ${context}`)) continue;
+      // « 3 min » désigne le plus souvent une durée de lecture ou de trajet.
+      // Cette forme n’est retenue que dans un contexte à la fois pressant et
+      // marchand, même sur un élément marqué « timer ».
+      if (!hasClock && !(urgencyPattern.test(context) && commercialPattern.test(context))) continue;
       if (!explicitMarker && !urgencyPattern.test(context)) continue;
 
       const commercial = commercialPattern.test(context);

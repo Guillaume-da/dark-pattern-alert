@@ -45,6 +45,10 @@
         <input id="securityAnalysis" type="checkbox" checked />
       </label>
       <label class="switch-row">
+        <span><strong>Éditeur et financement</strong><small>Sur les sites de presse connus, afficher qui possède le média.</small></span>
+        <input id="mediaOwnership" type="checkbox" checked />
+      </label>
+      <label class="switch-row">
         <span><strong>Mémoriser les domaines analysés</strong><small>Sert uniquement à signaler une première visite. Rien ne sort du navigateur.</small></span>
         <input id="rememberSites" type="checkbox" checked />
       </label>
@@ -119,6 +123,29 @@
           <ul class="trust-signals" id="trustSignals" hidden></ul>
         </section>
 
+        <section class="media-card" id="mediaCard" aria-labelledby="mediaName" hidden>
+          <div class="media-head">
+            <p class="media-eyebrow" id="mediaEyebrow">Média identifié</p>
+            <h2 id="mediaName">—</h2>
+            <span class="media-badge" id="mediaType">—</span>
+          </div>
+          <dl class="media-facts">
+            <div>
+              <dt>Propriétaire</dt>
+              <dd id="mediaOwner">—</dd>
+            </div>
+            <div>
+              <dt>Groupe</dt>
+              <dd id="mediaGroup">—</dd>
+            </div>
+            <div>
+              <dt>Financement</dt>
+              <dd id="mediaFunding">—</dd>
+            </div>
+          </dl>
+          <p class="media-note" id="mediaNote"></p>
+        </section>
+
         <section class="score-card" aria-labelledby="scoreTitle">
           <div class="score-ring" id="scoreRing"><span id="scoreValue">0</span><small>/100</small></div>
           <div>
@@ -156,6 +183,7 @@
 
     <div class="toast" id="toast" role="status" hidden>Rapport copié</div>
     <script src="reputation-rules.js"></script>
+    <script src="media-ownership.js"></script>
     <script src="sidepanel.js"></script>
   </body>
 </html>
