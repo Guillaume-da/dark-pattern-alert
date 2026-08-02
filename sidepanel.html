@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Dark Pattern Alert</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" role="img">
+          <path d="M12 2.5 20 6v5.8c0 5-3.4 8.3-8 9.7-4.6-1.4-8-4.7-8-9.7V6l8-3.5Z" />
+          <path d="m8.3 12.3 2.1 2.1 5.3-5.3" />
+        </svg>
+      </div>
+      <div class="brand-copy">
+        <p class="brand-name">Dark Pattern Alert</p>
+        <p class="privacy-note"><span></span> Analyse locale · aucune donnée envoyée</p>
+      </div>
+      <button class="icon-button" id="settingsButton" type="button" aria-label="Ouvrir les réglages" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+        </svg>
+      </button>
+    </header>
+
+    <aside class="settings-panel" id="settingsPanel" hidden>
+      <div>
+        <h2>Réglages</h2>
+        <button class="icon-button small" id="closeSettingsButton" type="button" aria-label="Fermer les réglages">×</button>
+      </div>
+      <label class="switch-row">
+        <span><strong>Signaux incertains</strong><small>Afficher aussi les détections à confiance modérée.</small></span>
+        <input id="includeLowConfidence" type="checkbox" checked />
+      </label>
+      <label class="switch-row">
+        <span><strong>Surlignage automatique</strong><small>Encadrer les éléments détectés dans la page.</small></span>
+        <input id="autoHighlight" type="checkbox" checked />
+      </label>
+    </aside>
+
+    <main>
+      <section class="state state-welcome" id="welcomeState">
+        <div class="hero-illustration" aria-hidden="true">
+          <svg viewBox="0 0 180 140">
+            <rect x="21" y="23" width="138" height="94" rx="12" />
+            <path d="M21 45h138" />
+            <circle cx="36" cy="34" r="3" />
+            <circle cx="47" cy="34" r="3" />
+            <circle cx="58" cy="34" r="3" />
+            <rect x="39" y="62" width="56" height="9" rx="4.5" />
+            <rect x="39" y="80" width="92" height="6" rx="3" />
+            <rect x="39" y="93" width="68" height="6" rx="3" />
+            <circle cx="139" cy="96" r="26" />
+            <path d="M139 82v16m0 9v.3" />
+          </svg>
+        </div>
+        <p class="eyebrow">Reprenez le contrôle</p>
+        <h1>Cette page essaie-t-elle de vous influencer&nbsp;?</h1>
+        <p class="intro">L’analyse repère les choix précochés, l’urgence artificielle, les boutons trompeurs et les obstacles à la résiliation.</p>
+        <button class="primary-button" id="scanButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9 17l11-11" /></svg>
+          Analyser cette page
+        </button>
+        <p class="shortcut-hint">L’analyse démarre uniquement à votre demande.</p>
+      </section>
+
+      <section class="state state-loading" id="loadingState" hidden aria-live="polite">
+        <div class="scanner-animation" aria-hidden="true"><span></span></div>
+        <p class="eyebrow">Analyse en cours</p>
+        <h1>On examine les choix proposés…</h1>
+        <p id="loadingStep">Recherche des cases précochées</p>
+      </section>
+
+      <section class="state state-error" id="errorState" hidden>
+        <div class="error-icon" aria-hidden="true">!</div>
+        <p class="eyebrow">Analyse impossible</p>
+        <h1 id="errorTitle">Cette page est protégée par Chrome</h1>
+        <p id="errorMessage">Ouvrez un site web classique, puis relancez l’analyse.</p>
+        <button class="secondary-button" id="retryButton" type="button">Réessayer</button>
+      </section>
+
+      <section class="results" id="resultsState" hidden aria-live="polite">
+        <div class="page-context">
+          <div class="site-avatar" id="siteAvatar">?</div>
+          <div>
+            <p id="siteName">Page analysée</p>
+            <span id="scanTime">À l’instant</span>
+          </div>
+          <button class="icon-button" id="rescanButton" type="button" aria-label="Relancer l’analyse">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" /></svg>
+          </button>
+        </div>
+
+        <section class="score-card" aria-labelledby="scoreTitle">
+          <div class="score-ring" id="scoreRing"><span id="scoreValue">0</span><small>/100</small></div>
+          <div>
+            <p class="risk-label" id="riskLabel">Risque faible</p>
+            <h1 id="scoreTitle"><span id="findingCount">0</span> signal détecté</h1>
+            <p id="scoreSummary">Aucun procédé trompeur évident n’a été repéré.</p>
+          </div>
+        </section>
+
+        <div class="result-actions">
+          <label class="compact-toggle">
+            <input id="highlightToggle" type="checkbox" checked />
+            <span>Surligner dans la page</span>
+          </label>
+          <button class="text-button" id="copyReportButton" type="button">Copier le rapport</button>
+        </div>
+
+        <nav class="filters" id="filters" aria-label="Filtrer les résultats"></nav>
+
+        <div class="findings-heading">
+          <h2>Signaux observés</h2>
+          <span id="visibleCount"></span>
+        </div>
+        <div class="findings-list" id="findingsList"></div>
+
+        <div class="empty-results" id="emptyResults" hidden>
+          <div aria-hidden="true">✓</div>
+          <h2>Aucun signal évident</h2>
+          <p>Cela ne garantit pas l’absence de pratiques trompeuses. Gardez un œil sur le prix final et les conditions de résiliation.</p>
+        </div>
+
+        <p class="disclaimer">Les détections sont des indices, pas des preuves. Vérifiez toujours le contexte avant de décider.</p>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" hidden>Rapport copié</div>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
