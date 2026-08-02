@@ -10,6 +10,10 @@
     // Forme durée : le plus souvent un temps de lecture ou de trajet.
     duration: /\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i,
     readingTime: /temps de lecture|min(?:ute)?s? de lecture|reading time|lecture\s*:\s*\d/i,
+    // Horaire annoncé — début de séance, date limite — plutôt que décompte :
+    // un jour, un mois ou la tournure « à 21:00 » désignent un rendez-vous.
+    scheduleMarker:
+      /\b(?:aujourd['’]hui|demain|hier|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|janvier|f[eé]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[eé]cembre|today|tomorrow|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|june|july|august|september|october|november|december)\b|\b[àa]\s?\d{1,2}\s?[:h]\d{2}\b|\b\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4}\b/i,
     timer:
       /\b(?:\d{1,2}:)?\d{1,2}:\d{2}\b|\b\d{1,2}\s*(?:min(?:ute)?s?|sec(?:onde)?s?)\b/i,
     urgency:
@@ -27,10 +31,43 @@
     autoRenew:
       /renouvel(?:lement|[eé]e?)\s+automatique|reconduit(?:e)?\s+automatiquement|automatically renew|auto[- ]?renew|charged automatically after|factur[eé].{0,50}(?:apr[eè]s|[àa] la fin).{0,40}(?:essai|p[eé]riode)/i,
     onlineCancellationBlock:
-      /impossible de r[eé]silier en ligne|ne peut pas [eê]tre r[eé]sili[eé] en ligne|cannot (?:be )?cancel(?:led)? online|no online cancellation/i
+      /impossible de r[eé]silier en ligne|ne peut pas [eê]tre r[eé]sili[eé] en ligne|cannot (?:be )?cancel(?:led)? online|no online cancellation/i,
+
+    // Frais opaques : leur objet n'est pas une prestation identifiable pour
+    // l'acheteur. Ce sont eux qui caractérisent un prix révélé en plusieurs fois.
+    opaqueFee:
+      /frais\s+(?:de\s+)?(?:service|dossier|gestion|traitement|r[eé]servation|paiement|transaction|plateforme|mise en relation)|frais\s+(?:suppl[eé]mentaires|obligatoires|additionnels|divers)|frais de retard|suppl[eé]ment(?:s)?\b|majoration|service (?:fee|charge)|booking fee|handling fee|processing fee|convenience fee|resort fee|platform fee|surcharge/i,
+    // Frais attendus : légitimes, mais à signaler s'ils n'apparaissent qu'au paiement.
+    expectedFee:
+      /frais\s+(?:de\s+)?(?:livraison|port|exp[eé]dition|transport)|participation aux frais de port|delivery fee|shipping (?:fee|cost|charges?)/i,
+    totalLabel:
+      /\btotal\b|montant (?:total|[àa] payer|d[ûu])|net [àa] payer|reste [àa] payer|order total|grand total|amount due|total to pay/i,
+    hiddenCostMention:
+      /hors frais|frais en sus|frais non inclus|\+\s*frais|hors livraison|hors options|hors taxes|prix hors|excluding fees|fees not included|plus (?:taxes|fees)|before fees/i
   };
 
-  const rules = Object.freeze({ patterns: Object.freeze(patterns) });
+  // Lecture d'un montant affiché, en format français ou anglais.
+  const parseAmount = (text = "") => {
+    const match = String(text).match(
+      /(?:€|EUR|\$|£)\s*([\d   ,.]+)|([\d   ,.]+)\s*(?:€|EUR\b|\$|£)/i
+    );
+    if (!match) return null;
+
+    const raw = (match[1] || match[2] || "").trim().replace(/[.,]$/, "");
+    if (!/\d/.test(raw)) return null;
+
+    let normalized = raw.replace(/[\s  ]/g, "");
+    if (/,\d{1,2}$/.test(normalized)) {
+      normalized = normalized.replace(/\./g, "").replace(",", ".");
+    } else {
+      normalized = normalized.replace(/,/g, "");
+    }
+
+    const value = Number.parseFloat(normalized);
+    return Number.isFinite(value) ? value : null;
+  };
+
+  const rules = Object.freeze({ patterns: Object.freeze(patterns), parseAmount });
   globalThis.__dpaDetectorRules = rules;
 
   if (typeof module !== "undefined" && module.exports) {

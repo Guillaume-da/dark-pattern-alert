@@ -38,6 +38,7 @@ Chrome 114 minimum (API `sidePanel`).
 | **Urgence artificielle** | compte à rebours, « dernière chance », « offre limitée » dans un contexte marchand |
 | **Interface trompeuse** | refus culpabilisant (« Non merci, je préfère payer plus cher »), bouton d’acceptation nettement plus visible que le refus |
 | **Abonnement et résiliation** | renouvellement automatique, résiliation exigeant un appel ou un courrier, résiliation en ligne impossible |
+| **Coûts ajoutés** | frais de service, de dossier ou de livraison qui gonflent le total après le prix annoncé ; mentions « hors frais », « + frais » ; part des frais dans le total |
 
 Chaque détection porte une **sévérité**, un **niveau de confiance** et l’extrait de page qui l’a déclenchée. Le bouton « Voir dans la page » fait défiler jusqu’à l’élément et l’encadre.
 
@@ -107,7 +108,7 @@ Détail complet dans [`PRIVACY.md`](PRIVACY.md).
 
 ## Page de démonstration
 
-`demo/index.html` rassemble volontairement des cases précochées, un compteur d’urgence, une résiliation par téléphone, un formulaire de paiement envoyé en HTTP vers un domaine tiers et un cadre de suivi masqué.
+`demo/index.html` rassemble volontairement des cases précochées, un compteur d’urgence, un récapitulatif qui ajoute 13,30 € de frais à un prix annoncé de 29,90 €, une résiliation par téléphone, un formulaire de paiement envoyé en HTTP vers un domaine tiers et un cadre de suivi masqué.
 
 Depuis le dossier **parent** du projet :
 
@@ -145,6 +146,7 @@ Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`
 Les résultats sont des **indices explicables, pas des preuves**.
 
 - Un compteur ne peut pas être qualifié de faux à partir d’un seul instantané : l’extension invite à le vérifier plutôt qu’à conclure.
+- Les frais sont lus dans le récapitulatif affiché : sur un tunnel où ils n’apparaissent qu’à l’étape suivante, l’extension ne peut rien voir avant d’y arriver. Un horaire de rendez-vous ou une date limite ne sont pas comptés comme des décomptes.
 - Les contenus rendus dans des iframes ou des composants fermés échappent à l’analyse.
 - Sans base de signalements ni WHOIS, l’analyse de réputation ignore l’âge du domaine et les campagnes d’hameçonnage en cours. **Un score de 100 signifie « rien d’anormal détectable localement », pas « site vérifié ».**
 - La table des médias est un instantané embarqué : un rachat récent n’y figure pas, et un titre absent de la liste n’affiche aucune carte. Elle décrit l’actionnariat, jamais l’indépendance réelle d’une rédaction.

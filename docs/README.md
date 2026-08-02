@@ -10,7 +10,7 @@ Le panneau explique immédiatement ce qui est analysé et rappelle que les donn�
 
 ## Page de démonstration
 
-La page de test rassemble des choix commerciaux précochés, un compteur d’urgence, des conditions d’abonnement volontairement contraignantes, un formulaire de paiement envoyé en HTTP vers un domaine tiers et un cadre de suivi masqué.
+La page de test rassemble des choix commerciaux précochés, un compteur d’urgence, un récapitulatif qui ajoute des frais au prix annoncé, des conditions d’abonnement volontairement contraignantes, un formulaire de paiement envoyé en HTTP vers un domaine tiers et un cadre de suivi masqué.
 
 ![Page de démonstration contenant plusieurs dark patterns](screenshots/02-demo-page.png)
 

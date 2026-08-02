@@ -4,6 +4,7 @@
   // `detector-rules.js` doit être injecté avant ce fichier : il porte les
   // expressions de détection, partagées avec les tests exécutés sous Node.
   const patterns = globalThis.__dpaDetectorRules?.patterns;
+  const parseAmount = globalThis.__dpaDetectorRules?.parseAmount;
   if (!patterns) {
     console.warn("Dark Pattern Alert : detector-rules.js n’a pas été chargé, analyse annulée.");
     return;
@@ -18,7 +19,8 @@
     preselection: "Choix précoché",
     urgency: "Urgence artificielle",
     visual: "Interface trompeuse",
-    cancellation: "Abonnement et résiliation"
+    cancellation: "Abonnement et résiliation",
+    cost: "Coûts ajoutés"
   };
 
   const state = {
@@ -207,7 +209,8 @@
       commercial: commercialPattern,
       clock: clockPattern,
       duration: durationPattern,
-      readingTime: readingTimePattern
+      readingTime: readingTimePattern,
+      scheduleMarker: schedulePattern
     } = patterns;
 
     const explicitTimers = document.querySelectorAll(
@@ -229,6 +232,9 @@
       const hasClock = clockPattern.test(ownText);
       const hasDuration = durationPattern.test(ownText);
       if (!hasClock && !hasDuration) continue;
+      // Une heure de rendez-vous n’est pas un décompte, même sur une page
+      // marchande : « aujourd’hui à 21:00 », « 7 août, 23:59 ».
+      if (schedulePattern.test(ownText)) continue;
       const context = nearbyText(element);
       if (readingTimePattern.test(context)) continue;
       const marker = lower(`${element.id} ${element.className || ""} ${element.getAttribute("role") || ""}`);
@@ -367,6 +373,94 @@
     }
   };
 
+  // Coûts révélés en fin de parcours : le prix mis en avant n'est pas celui
+  // que l'acheteur paiera. On travaille sur les lignes courtes d'un
+  // récapitulatif, les phrases longues étant du texte éditorial ou légal.
+  const scanLateCosts = (textCandidates) => {
+    const { opaqueFee, expectedFee, totalLabel, hiddenCostMention, commercial } = patterns;
+    const MAX_LINE = 140;
+
+    const lines = textCandidates.filter((element) => {
+      const text = elementText(element, MAX_LINE + 1);
+      return text.length > 0 && text.length <= MAX_LINE;
+    });
+
+    const collect = (pattern) => {
+      const found = new Map();
+      for (const element of lines) {
+        const text = elementText(element, MAX_LINE);
+        if (!pattern.test(text)) continue;
+        const amount = parseAmount(text);
+        if (amount === null || amount <= 0) continue;
+        // Un même montant se répète souvent dans des conteneurs imbriqués.
+        const key = `${lower(text).replace(/[\d.,]/g, "")}|${amount}`;
+        if (!found.has(key)) found.set(key, { element, text, amount });
+      }
+      return [...found.values()];
+    };
+
+    const opaque = collect(opaqueFee);
+    const expected = collect(expectedFee);
+    const totals = collect(totalLabel);
+    const pageIsCommercial = totals.length > 0 || commercial.test(lower(document.body?.innerText?.slice(0, 4000) || ""));
+
+    // Un article de presse peut citer « frais de dossier : 250 € ». Sans
+    // récapitulatif ni vocabulaire d'achat, ce n'est pas un tunnel de paiement.
+    if (!pageIsCommercial) return;
+
+    // Les libellés et montants viennent souvent de deux éléments accolés.
+    const readable = (text) => text.replace(/(\p{L})(?=\d)/gu, "$1 ");
+
+    if (opaque.length > 0 || expected.length > 0) {
+      const feeSum = [...opaque, ...expected].reduce((sum, fee) => sum + fee.amount, 0);
+      const total = totals.reduce((highest, item) => Math.max(highest, item.amount), 0);
+      const share = total > 0 ? feeSum / total : null;
+      const anchor = opaque[0] || expected[0];
+      const listed = [...opaque, ...expected]
+        .slice(0, 4)
+        .map((fee) => readable(fee.text))
+        .join(" · ");
+
+      const heavy = (share !== null && share >= 0.15) || opaque.length >= 3;
+      const detail = [
+        opaque.length > 0
+          ? "Des frais sans contrepartie identifiable s’ajoutent au prix mis en avant."
+          : "Des frais de livraison s’ajoutent au prix mis en avant.",
+        share !== null
+          ? `Ils représentent environ ${Math.round(share * 100)} % du total affiché.`
+          : "Comparez avec le prix annoncé sur la page produit avant de valider.",
+        "Vérifiez le montant réellement débité à l’étape suivante."
+      ].join(" ");
+
+      if (opaque.length > 0 || share === null || share >= 0.05) {
+        addFinding({
+          category: "cost",
+          title: opaque.length > 0 ? "Frais ajoutés au prix annoncé" : "Frais de livraison ajoutés au total",
+          detail,
+          evidence: listed,
+          severity: heavy && opaque.length > 0 ? "high" : "medium",
+          confidence: total > 0 ? 0.9 : 0.72,
+          element: anchor.element
+        });
+      }
+    }
+
+    for (const element of lines) {
+      const text = elementText(element, MAX_LINE);
+      if (!hiddenCostMention.test(text)) continue;
+      addFinding({
+        category: "cost",
+        title: "Prix annoncé sans les frais",
+        detail:
+          "La page prévient que le montant affiché est incomplet. Le coût final n’apparaîtra qu’à une étape ultérieure.",
+        evidence: text,
+        severity: "medium",
+        confidence: 0.8,
+        element
+      });
+    }
+  };
+
   const calculateScore = (findings) => {
     const weights = { high: 22, medium: 12, low: 6 };
     const base = findings.reduce(
@@ -398,6 +492,7 @@
     scanUrgency(textCandidates);
     scanMisleadingControls();
     scanCancellationFriction(textCandidates);
+    scanLateCosts(textCandidates);
 
     if (settings.includeLowConfidence === false) {
       const retained = state.findings.filter((finding) => finding.confidence >= 0.72);
