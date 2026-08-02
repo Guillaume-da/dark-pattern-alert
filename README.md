@@ -42,6 +42,20 @@ Chrome 114 minimum (API `sidePanel`).
 
 Chaque détection porte une **sévérité**, un **niveau de confiance** et l’extrait de page qui l’a déclenchée. Le bouton « Voir dans la page » fait défiler jusqu’à l’élément et l’encadre.
 
+#### Compteurs : la comparaison entre deux visites
+
+Un décompte ne peut pas être qualifié de faux sur un seul instantané. L’extension relève donc sa valeur, localement, et la confronte à la visite suivante :
+
+| Verdict | Ce qui a été observé |
+| --- | --- |
+| **Compteur réarmé** | il affiche plus de temps qu’à la visite précédente |
+| **Compteur relancé après son terme** | il aurait dû atteindre zéro et tourne encore |
+| **Compteur qui ne suit pas le temps réel** | l’écart avec le temps écoulé ne s’explique pas |
+| **Compteur plus rapide que le temps réel** | il descend plus vite que l’horloge |
+| **Compteur cohérent** | il a perdu exactement le temps écoulé — la sévérité **baisse**, et le score avec elle |
+
+Le soupçon devient un constat daté, dans les deux sens : un compteur honnête est explicitement reconnu comme tel. Il faut au moins une minute entre deux analyses pour qu’un verdict soit rendu.
+
 ### 2. Réputation et sécurité du site
 
 **Identité du domaine**
@@ -100,6 +114,7 @@ Les éléments signalés sont encadrés directement dans la page :
     <td width="54%" valign="top">
       <p>L’extension demande <code>activeTab</code>, <code>scripting</code>, <code>sidePanel</code> et <code>storage</code> — rien de plus. Elle n’observe pas la navigation en arrière-plan et n’ouvre aucune connexion réseau.</p>
       <p><strong>Mémoriser les domaines analysés</strong> conserve au plus 500 noms de domaine sur lesquels une analyse a été explicitement lancée, uniquement pour signaler une première visite. Ni URL complète, ni horodatage, ni contenu de page. Désactivable avant toute analyse, effaçable d’un clic.</p>
+      <p><strong>Comparer les compteurs</strong> conserve, pour au plus 200 pages portant un décompte, l’adresse sans paramètres, la valeur relevée et sa date. C’est ce qui permet de dire « ce compteur s’est réarmé » plutôt que « ce compteur est peut-être faux ». Même bouton d’effacement.</p>
     </td>
   </tr>
 </table>
@@ -145,7 +160,7 @@ Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`
 
 Les résultats sont des **indices explicables, pas des preuves**.
 
-- Un compteur ne peut pas être qualifié de faux à partir d’un seul instantané : l’extension invite à le vérifier plutôt qu’à conclure.
+- Un compteur ne peut pas être qualifié de faux à partir d’un seul instantané : la première analyse invite à vérifier, la suivante tranche. La comparaison suppose que le compteur garde la même identité entre deux visites ; une page qui régénère ses classes à chaque chargement échappe au rapprochement.
 - Les frais sont lus dans le récapitulatif affiché : sur un tunnel où ils n’apparaissent qu’à l’étape suivante, l’extension ne peut rien voir avant d’y arriver. Un horaire de rendez-vous ou une date limite ne sont pas comptés comme des décomptes.
 - Les contenus rendus dans des iframes ou des composants fermés échappent à l’analyse.
 - Sans base de signalements ni WHOIS, l’analyse de réputation ignore l’âge du domaine et les campagnes d’hameçonnage en cours. **Un score de 100 signifie « rien d’anormal détectable localement », pas « site vérifié ».**

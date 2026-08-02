@@ -4,7 +4,7 @@
   // `detector-rules.js` doit être injecté avant ce fichier : il porte les
   // expressions de détection, partagées avec les tests exécutés sous Node.
   const patterns = globalThis.__dpaDetectorRules?.patterns;
-  const parseAmount = globalThis.__dpaDetectorRules?.parseAmount;
+  const { parseAmount, parseCountdown, calculateScore } = globalThis.__dpaDetectorRules || {};
   if (!patterns) {
     console.warn("Dark Pattern Alert : detector-rules.js n’a pas été chargé, analyse annulée.");
     return;
@@ -150,7 +150,8 @@
     evidence,
     severity = "medium",
     confidence = 0.7,
-    element
+    element,
+    counter = null
   }) => {
     if (!element || state.findings.length >= MAX_FINDINGS) return;
 
@@ -171,6 +172,7 @@
       evidence: compact(evidence).slice(0, 220),
       severity,
       confidence: Math.max(0, Math.min(1, confidence)),
+      counter,
       location: {
         x: Math.round(rect.x),
         y: Math.round(rect.y + window.scrollY)
@@ -224,6 +226,7 @@
 
     // « Temps de lecture : 3 min » n’est pas un décompte commercial, et son
     // icône porte souvent une classe contenant « timer ».
+    let counterOrdinal = 0;
     for (const element of candidates) {
       if (!isVisible(element)) continue;
       const ownText = elementText(element);
@@ -246,12 +249,24 @@
       if (!explicitMarker && !urgencyPattern.test(context)) continue;
 
       const commercial = commercialPattern.test(context);
+      // Identité stable du compteur d’une visite à l’autre : ni position à
+      // l’écran, ni valeur affichée, qui changent par nature.
+      const seconds = parseCountdown(ownText);
+      counterOrdinal += 1;
+      const counter = seconds
+        ? {
+            key: `${element.tagName}|${element.id || ""}|${String(element.className || "").split(/\s+/)[0] || ""}|${counterOrdinal}`,
+            seconds
+          }
+        : null;
+
       addFinding({
         category: "urgency",
         title: "Compteur d’urgence à vérifier",
         detail:
           "Un décompte peut créer une pression artificielle. Rechargez la page ou revenez plus tard pour vérifier s’il repart à zéro.",
         evidence: ownText || context,
+        counter,
         severity: commercial ? "high" : "medium",
         confidence: explicitMarker ? 0.84 : 0.66,
         element
@@ -459,16 +474,6 @@
         element
       });
     }
-  };
-
-  const calculateScore = (findings) => {
-    const weights = { high: 22, medium: 12, low: 6 };
-    const base = findings.reduce(
-      (total, finding) => total + weights[finding.severity] * (0.55 + finding.confidence * 0.45),
-      0
-    );
-    const categoryBonus = Math.max(0, new Set(findings.map((finding) => finding.category)).size - 1) * 4;
-    return Math.min(100, Math.round(base + categoryBonus));
   };
 
   const buildSummary = (findings) => {

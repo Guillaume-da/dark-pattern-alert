@@ -67,7 +67,68 @@
     return Number.isFinite(value) ? value : null;
   };
 
-  const rules = Object.freeze({ patterns: Object.freeze(patterns), parseAmount });
+  // Lecture d'un décompte affiché : « 00:09:42 » ou « 09:42 ».
+  const parseCountdown = (text = "") => {
+    const match = String(text).match(/\b(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\b/);
+    if (!match) return null;
+    const [, hours, minutes, seconds] = match;
+    const total = hours
+      ? Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds)
+      : Number(minutes) * 60 + Number(seconds);
+    return Number.isFinite(total) && total > 0 ? total : null;
+  };
+
+  // Confronte un décompte au relevé de la visite précédente. Un compteur
+  // honnête perd exactement le temps écoulé ; tout le reste se voit ici.
+  const MIN_ELAPSED_SECONDS = 60;
+
+  const compareCounter = (previous, current, nowMs = Date.now()) => {
+    if (!previous || typeof previous.seconds !== "number" || typeof previous.observedAt !== "number") {
+      return { verdict: "first" };
+    }
+
+    const elapsed = (nowMs - previous.observedAt) / 1000;
+    if (elapsed < MIN_ELAPSED_SECONDS) return { verdict: "too-soon", elapsed };
+
+    const expected = previous.seconds - elapsed;
+    const tolerance = Math.max(20, elapsed * 0.05);
+    const drift = current - expected;
+
+    if (current > previous.seconds + tolerance) {
+      return { verdict: "reset", elapsed, expected, drift };
+    }
+    if (expected <= 0 && current > tolerance) {
+      return { verdict: "restarted", elapsed, expected, drift };
+    }
+    if (drift > tolerance) {
+      return { verdict: "stalled", elapsed, expected, drift };
+    }
+    if (drift < -tolerance) {
+      return { verdict: "faster", elapsed, expected, drift };
+    }
+    return { verdict: "consistent", elapsed, expected, drift };
+  };
+
+  // Pondération du score, partagée entre le scanner et le panneau : ce dernier
+  // doit pouvoir recalculer après avoir requalifié un compteur.
+  const calculateScore = (findings = []) => {
+    const weights = { high: 22, medium: 12, low: 6 };
+    const base = findings.reduce(
+      (total, finding) => total + (weights[finding.severity] || 0) * (0.55 + finding.confidence * 0.45),
+      0
+    );
+    const categoryBonus = Math.max(0, new Set(findings.map((finding) => finding.category)).size - 1) * 4;
+    return Math.min(100, Math.round(base + categoryBonus));
+  };
+
+  const rules = Object.freeze({
+    patterns: Object.freeze(patterns),
+    parseAmount,
+    parseCountdown,
+    compareCounter,
+    calculateScore,
+    MIN_ELAPSED_SECONDS
+  });
   globalThis.__dpaDetectorRules = rules;
 
   if (typeof module !== "undefined" && module.exports) {
