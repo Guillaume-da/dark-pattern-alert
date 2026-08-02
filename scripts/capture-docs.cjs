@@ -47,6 +47,37 @@ const listen = () =>
 
 const closeServer = () => new Promise((resolve) => server.close(resolve));
 
+const renderTrust = async (page, trust) => {
+  await page.evaluate((data) => {
+    const badges = { trusted: "✓", caution: "!", risky: "⚠" };
+    const card = document.querySelector("#trustCard");
+    card.hidden = false;
+    card.dataset.level = data.level;
+    document.querySelector("#trustBadge").textContent = badges[data.level] || "?";
+    document.querySelector("#trustScore").textContent = data.score;
+    document.querySelector("#trustTitle").textContent = data.label;
+    document.querySelector("#trustSummary").textContent = data.summary;
+
+    const list = document.querySelector("#trustSignals");
+    list.replaceChildren();
+    for (const item of data.signals) {
+      const entry = document.createElement("li");
+      entry.className = "trust-signal";
+      entry.dataset.severity = item.severity;
+      const label = document.createElement("p");
+      label.className = "trust-signal-label";
+      label.textContent = item.label;
+      const detail = document.createElement("p");
+      detail.className = "trust-signal-detail";
+      detail.textContent = item.detail;
+      entry.append(label, detail);
+      list.append(entry);
+    }
+    list.hidden = false;
+    document.querySelector("#trustToggle").setAttribute("aria-expanded", "true");
+  }, trust);
+};
+
 const renderResults = async (page, report) => {
   await page.evaluate((data) => {
     const categoryMeta = {
@@ -155,6 +186,13 @@ const renderResults = async (page, report) => {
       globalThis.__darkPatternAlertScanner.scan({ includeLowConfidence: true, highlightsEnabled: true })
     );
 
+    await demo.addScriptTag({ path: path.join(extensionRoot, "reputation-rules.js") });
+    await demo.addScriptTag({ path: path.join(extensionRoot, "site-probe.js") });
+    const trust = await demo.evaluate(() => {
+      const facts = globalThis.__darkPatternAlertProbe.collectFacts();
+      return globalThis.__dpaReputationRules.buildTrustReport({ url: facts.url, facts, firstVisit: true });
+    });
+
     await demo.evaluate(() => document.querySelector("dialog")?.close());
     await demo.evaluate(() =>
       globalThis.__darkPatternAlertScanner.scan({ includeLowConfidence: true, highlightsEnabled: true })
@@ -162,10 +200,12 @@ const renderResults = async (page, report) => {
     await demo.screenshot({ path: path.join(outputRoot, "03-page-highlights.png"), fullPage: true });
 
     await renderResults(panel, report);
+    await renderTrust(panel, trust);
     await panel.screenshot({ path: path.join(outputRoot, "04-analysis-results.png"), fullPage: true });
 
     console.log(`Captures générées : ${outputRoot}`);
     console.log(`Signaux utilisés dans le rapport : ${report.findings.length}, score ${report.score}/100`);
+    console.log(`Confiance du site : ${trust.score}/100 (${trust.label}), ${trust.alertCount} alerte(s)`);
   } finally {
     await browser.close();
     await closeServer();

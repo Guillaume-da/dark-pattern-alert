@@ -10,7 +10,7 @@ Le panneau explique immédiatement ce qui est analysé et rappelle que les donn�
 
 ## Page de démonstration
 
-La page de test rassemble des choix commerciaux précochés, un compteur d’urgence et des conditions d’abonnement volontairement contraignantes.
+La page de test rassemble des choix commerciaux précochés, un compteur d’urgence, des conditions d’abonnement volontairement contraignantes, un formulaire de paiement envoyé en HTTP vers un domaine tiers et un cadre de suivi masqué.
 
 ![Page de démonstration contenant plusieurs dark patterns](screenshots/02-demo-page.png)
 
@@ -22,7 +22,7 @@ Chaque élément signalé est encadré pour permettre à l’utilisateur de le r
 
 ## Rapport d’analyse
 
-Le rapport présente un score indicatif, les catégories observées, le niveau de sévérité et la confiance de chaque détection.
+Le rapport s’ouvre sur la confiance accordée au site — identité du domaine, chiffrement, formulaires, cadres tiers, informations légales — puis présente un score indicatif, les catégories observées, le niveau de sévérité et la confiance de chaque détection.
 
 ![Rapport détaillé produit par l’extension](screenshots/04-analysis-results.png)
 

@@ -11,6 +11,16 @@ const els = {
   settingsPanel: document.querySelector("#settingsPanel"),
   includeLowConfidence: document.querySelector("#includeLowConfidence"),
   autoHighlight: document.querySelector("#autoHighlight"),
+  securityAnalysis: document.querySelector("#securityAnalysis"),
+  rememberSites: document.querySelector("#rememberSites"),
+  clearHistoryButton: document.querySelector("#clearHistoryButton"),
+  trustCard: document.querySelector("#trustCard"),
+  trustBadge: document.querySelector("#trustBadge"),
+  trustScore: document.querySelector("#trustScore"),
+  trustTitle: document.querySelector("#trustTitle"),
+  trustSummary: document.querySelector("#trustSummary"),
+  trustSignals: document.querySelector("#trustSignals"),
+  trustToggle: document.querySelector("#trustToggle"),
   highlightToggle: document.querySelector("#highlightToggle"),
   copyReportButton: document.querySelector("#copyReportButton"),
   loadingStep: document.querySelector("#loadingStep"),
@@ -36,11 +46,15 @@ const els = {
 
 const state = {
   report: null,
+  trust: null,
   activeTabId: null,
   filter: "all",
   loadingTimer: null,
   toastTimer: null
 };
+
+const KNOWN_HOSTS_KEY = "dpaKnownHosts";
+const KNOWN_HOSTS_LIMIT = 500;
 
 const categoryPresentation = {
   preselection: { label: "Choix précoché", icon: "✓" },
@@ -84,7 +98,9 @@ const persistSettings = async () => {
   await chrome.storage.local.set({
     dpaSettings: {
       includeLowConfidence: els.includeLowConfidence.checked,
-      autoHighlight: els.autoHighlight.checked
+      autoHighlight: els.autoHighlight.checked,
+      securityAnalysis: els.securityAnalysis.checked,
+      rememberSites: els.rememberSites.checked
     }
   });
 };
@@ -94,7 +110,23 @@ const loadSettings = async () => {
   if (!dpaSettings) return;
   els.includeLowConfidence.checked = dpaSettings.includeLowConfidence !== false;
   els.autoHighlight.checked = dpaSettings.autoHighlight !== false;
+  els.securityAnalysis.checked = dpaSettings.securityAnalysis !== false;
+  els.rememberSites.checked = dpaSettings.rememberSites !== false;
   els.highlightToggle.checked = els.autoHighlight.checked;
+};
+
+// Historique local et minimal : seuls les domaines explicitement analysés sont
+// mémorisés, uniquement pour signaler une première visite.
+const rememberHost = async (hostname) => {
+  if (!hostname || !els.rememberSites.checked) return false;
+  const stored = await chrome.storage.local.get(KNOWN_HOSTS_KEY);
+  const known = Array.isArray(stored[KNOWN_HOSTS_KEY]) ? stored[KNOWN_HOSTS_KEY] : [];
+  const firstVisit = !known.includes(hostname);
+  if (firstVisit) {
+    const next = [...known, hostname].slice(-KNOWN_HOSTS_LIMIT);
+    await chrome.storage.local.set({ [KNOWN_HOSTS_KEY]: next });
+  }
+  return firstVisit;
 };
 
 const currentTab = async () => {
@@ -130,7 +162,8 @@ const startLoadingMessages = () => {
     "Recherche des cases précochées",
     "Vérification des compteurs et messages d’urgence",
     "Comparaison des boutons et choix proposés",
-    "Lecture des conditions d’abonnement"
+    "Lecture des conditions d’abonnement",
+    "Contrôle du domaine et du chiffrement"
   ];
   let index = 0;
   els.loadingStep.textContent = steps[index];
@@ -175,6 +208,7 @@ const runScan = async () => {
     }
 
     state.report = response.report;
+    state.trust = await runSecurityAnalysis(tab);
     state.filter = "all";
     els.highlightToggle.checked = els.autoHighlight.checked;
     renderReport();
@@ -187,6 +221,31 @@ const runScan = async () => {
     setView("error");
   } finally {
     stopLoadingMessages();
+  }
+};
+
+// L’analyse de réputation reste locale : identité du domaine, transport et
+// formulaires de la page. Aucun service externe n’est interrogé.
+const runSecurityAnalysis = async (tab) => {
+  if (!els.securityAnalysis.checked) return null;
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["site-probe.js"]
+    });
+    const response = await chrome.tabs.sendMessage(tab.id, { type: "DPA_SITE_FACTS" });
+    if (!response?.ok || !response.facts) throw new Error(response?.error || "Sonde indisponible");
+
+    const firstVisit = await rememberHost(response.facts.hostname);
+    return globalThis.__dpaReputationRules.buildTrustReport({
+      url: response.facts.url || tab.url,
+      facts: response.facts,
+      firstVisit
+    });
+  } catch (error) {
+    console.warn("Dark Pattern Alert (sécurité):", error);
+    return null;
   }
 };
 
@@ -243,8 +302,45 @@ const renderReport = () => {
   els.scoreTitle.lastChild.textContent = count > 1 ? " signaux détectés" : " signal détecté";
   els.scoreSummary.textContent = scoreInfo.summary;
 
+  renderTrust();
   renderFilters();
   renderFindings();
+};
+
+const TRUST_BADGES = { trusted: "✓", caution: "!", risky: "⚠" };
+
+const renderTrust = () => {
+  const trust = state.trust;
+  els.trustCard.hidden = !trust;
+  if (!trust) return;
+
+  els.trustCard.dataset.level = trust.level;
+  els.trustBadge.textContent = TRUST_BADGES[trust.level] || "?";
+  els.trustScore.textContent = trust.score;
+  els.trustTitle.textContent = trust.label;
+  els.trustSummary.textContent = trust.summary;
+
+  els.trustSignals.replaceChildren();
+  for (const item of trust.signals) {
+    const entry = document.createElement("li");
+    entry.className = "trust-signal";
+    entry.dataset.severity = item.severity;
+
+    const label = document.createElement("p");
+    label.className = "trust-signal-label";
+    label.textContent = item.label;
+
+    const detail = document.createElement("p");
+    detail.className = "trust-signal-detail";
+    detail.textContent = item.detail;
+
+    entry.append(label, detail);
+    els.trustSignals.append(entry);
+  }
+
+  const alerting = trust.alertCount > 0;
+  els.trustSignals.hidden = !alerting;
+  els.trustToggle.setAttribute("aria-expanded", String(alerting));
 };
 
 const renderFilters = () => {
@@ -362,13 +458,23 @@ const focusFinding = async (id) => {
 };
 
 const reportAsText = () => {
-  const { report } = state;
+  const { report, trust } = state;
   const lines = [
     "DARK PATTERN ALERT",
     `${safeHostname(report)} — score ${report.score}/100`,
     `${report.findings.length} signal${report.findings.length > 1 ? "aux" : ""} détecté${report.findings.length > 1 ? "s" : ""}`,
     ""
   ];
+
+  if (trust) {
+    lines.push(`RÉPUTATION ET SÉCURITÉ — ${trust.score}/100 · ${trust.label}`);
+    for (const item of trust.signals) {
+      if (item.weight === 0) continue;
+      lines.push(`   - ${item.label} : ${item.detail}`);
+    }
+    if (trust.alertCount === 0) lines.push("   - Aucune anomalie relevée par les vérifications locales.");
+    lines.push("");
+  }
   report.findings.forEach((finding, index) => {
     lines.push(
       `${index + 1}. [${severityLabels[finding.severity]}] ${finding.title}`,
@@ -397,6 +503,20 @@ els.closeSettingsButton.addEventListener("click", () => {
 });
 
 els.includeLowConfidence.addEventListener("change", persistSettings);
+els.securityAnalysis.addEventListener("change", persistSettings);
+els.rememberSites.addEventListener("change", persistSettings);
+
+els.trustToggle.addEventListener("click", () => {
+  const open = els.trustSignals.hidden;
+  els.trustSignals.hidden = !open;
+  els.trustToggle.setAttribute("aria-expanded", String(open));
+});
+
+els.clearHistoryButton.addEventListener("click", async () => {
+  await chrome.storage.local.remove(KNOWN_HOSTS_KEY);
+  showToast("Domaines mémorisés effacés");
+});
+
 els.autoHighlight.addEventListener("change", async () => {
   await persistSettings();
   els.highlightToggle.checked = els.autoHighlight.checked;
