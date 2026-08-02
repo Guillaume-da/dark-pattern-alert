@@ -1,0 +1,14 @@
+{
+  "name": "dark-pattern-alert",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Extension Chrome qui repère les interfaces trompeuses et évalue la réputation du site, entièrement en local.",
+  "scripts": {
+    "test": "node test-rules.js && node test-reputation.js",
+    "capture": "node scripts/capture-docs.cjs",
+    "capture:system-chrome": "node scripts/capture-docs-with-system-chrome.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
