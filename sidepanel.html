@@ -53,6 +53,10 @@
         <input id="compareCounters" type="checkbox" checked />
       </label>
       <label class="switch-row">
+        <span><strong>Suivre les parcours de résiliation</strong><small>Compter les pages de résiliation que vous analysez sur un même site.</small></span>
+        <input id="trackJourney" type="checkbox" checked />
+      </label>
+      <label class="switch-row">
         <span><strong>Tenir compte de mes retours</strong><small>Écarter des prochains rapports les signaux que vous jugez faux, site par site.</small></span>
         <input id="useFeedback" type="checkbox" checked />
       </label>
@@ -152,6 +156,13 @@
             </div>
           </dl>
           <p class="media-note" id="mediaNote"></p>
+        </section>
+
+        <section class="journey-card" id="journeyCard" aria-labelledby="journeyTitle" hidden>
+          <p class="journey-eyebrow">Parcours de résiliation</p>
+          <h2 id="journeyTitle">—</h2>
+          <p class="journey-summary" id="journeySummary"></p>
+          <ol class="journey-steps" id="journeySteps"></ol>
         </section>
 
         <section class="score-card" aria-labelledby="scoreTitle">

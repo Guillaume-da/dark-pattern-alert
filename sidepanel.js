@@ -15,6 +15,11 @@ const els = {
   mediaOwnership: document.querySelector("#mediaOwnership"),
   compareCounters: document.querySelector("#compareCounters"),
   useFeedback: document.querySelector("#useFeedback"),
+  trackJourney: document.querySelector("#trackJourney"),
+  journeyCard: document.querySelector("#journeyCard"),
+  journeyTitle: document.querySelector("#journeyTitle"),
+  journeySummary: document.querySelector("#journeySummary"),
+  journeySteps: document.querySelector("#journeySteps"),
   dismissedNote: document.querySelector("#dismissedNote"),
   dismissedCount: document.querySelector("#dismissedCount"),
   toggleDismissed: document.querySelector("#toggleDismissed"),
@@ -66,6 +71,7 @@ const state = {
   feedback: {},
   feedbackHost: "",
   showDismissed: false,
+  journey: null,
   activeTabId: null,
   filter: "all",
   loadingTimer: null,
@@ -78,6 +84,9 @@ const COUNTERS_KEY = "dpaCounters";
 const COUNTERS_PAGE_LIMIT = 200;
 const FEEDBACK_KEY = "dpaFeedback";
 const FEEDBACK_HOST_LIMIT = 300;
+const JOURNEY_KEY = "dpaJourneys";
+const JOURNEY_HOST_LIMIT = 100;
+const JOURNEY_STEP_LIMIT = 30;
 
 // Verdicts rendus par la comparaison entre deux visites. Un décompte honnête
 // perd exactement le temps écoulé ; les autres cas sont des constats, plus
@@ -193,6 +202,7 @@ const persistSettings = async () => {
       mediaOwnership: els.mediaOwnership.checked,
       compareCounters: els.compareCounters.checked,
       useFeedback: els.useFeedback.checked,
+      trackJourney: els.trackJourney.checked,
       rememberSites: els.rememberSites.checked
     }
   });
@@ -207,6 +217,7 @@ const loadSettings = async () => {
   els.mediaOwnership.checked = dpaSettings.mediaOwnership !== false;
   els.compareCounters.checked = dpaSettings.compareCounters !== false;
   els.useFeedback.checked = dpaSettings.useFeedback !== false;
+  els.trackJourney.checked = dpaSettings.trackJourney !== false;
   els.rememberSites.checked = dpaSettings.rememberSites !== false;
   els.highlightToggle.checked = els.autoHighlight.checked;
 };
@@ -307,6 +318,7 @@ const runScan = async () => {
     state.report = response.report;
     await applyCounterHistory(state.report);
     await applyFeedback(state.report);
+    await applyJourney(state.report);
     state.trust = await runSecurityAnalysis(tab);
     state.media = els.mediaOwnership.checked
       ? globalThis.__dpaMediaOwnership.lookupMedia(response.report.url || tab.url)
@@ -375,6 +387,37 @@ const applyCounterHistory = async (report) => {
   const pages = { ...history, [key]: { ...previousPage, ...nextPage } };
   const trimmed = Object.fromEntries(Object.entries(pages).slice(-COUNTERS_PAGE_LIMIT));
   await chrome.storage.local.set({ [COUNTERS_KEY]: trimmed });
+};
+
+// Parcours de résiliation : chaque page de résiliation analysée à la demande
+// est enregistrée pour ce site. L’extension n’observe pas la navigation ; elle
+// ne compte que ce que l’utilisateur lui a explicitement soumis.
+const applyJourney = async (report) => {
+  state.journey = null;
+  if (!els.trackJourney.checked) return;
+
+  const host = feedbackHost(report.url);
+  if (!host) return;
+
+  const { cancellationStep, summarizeJourney } = globalThis.__dpaDetectorRules;
+  const step = cancellationStep({ url: report.url, findings: report.findings });
+
+  const stored = await chrome.storage.local.get(JOURNEY_KEY);
+  const all = stored[JOURNEY_KEY] && typeof stored[JOURNEY_KEY] === "object" ? stored[JOURNEY_KEY] : {};
+  let steps = Array.isArray(all[host]) ? all[host] : [];
+
+  if (step) {
+    const now = Date.now();
+    steps = [...steps.filter((existing) => existing.path !== step.path), { ...step, at: now }].slice(
+      -JOURNEY_STEP_LIMIT
+    );
+    const merged = { ...all, [host]: steps };
+    const trimmed = Object.fromEntries(Object.entries(merged).slice(-JOURNEY_HOST_LIMIT));
+    await chrome.storage.local.set({ [JOURNEY_KEY]: trimmed });
+  }
+
+  if (steps.length < 2) return;
+  state.journey = { host, ...summarizeJourney(steps), steps };
 };
 
 // Retours de l’utilisateur sur un signal, conservés par site. Ils ne servent
@@ -527,6 +570,7 @@ const renderReport = () => {
 
   renderTrust();
   renderMedia();
+  renderJourney();
   renderFilters();
   renderFindings();
 };
@@ -546,6 +590,42 @@ const renderMedia = () => {
   els.mediaGroup.textContent = media.group;
   els.mediaFunding.textContent = media.funding;
   els.mediaNote.textContent = `Faits d’actionnariat et de financement, arrêtés en ${media.snapshot}. Aucune appréciation de la ligne éditoriale, aucun effet sur les scores ci-dessus. L’actionnariat des médias change souvent : vérifiez avant de conclure.`;
+};
+
+const renderJourney = () => {
+  const journey = state.journey;
+  els.journeyCard.hidden = !journey;
+  if (!journey) return;
+
+  const days = journey.firstAt && journey.lastAt ? Math.round((journey.lastAt - journey.firstAt) / 86_400_000) : 0;
+  els.journeyTitle.textContent = `Résilier vous a demandé ${journey.pages} pages sur ce site`;
+  els.journeySummary.textContent = [
+    days >= 1 ? `Étapes relevées sur ${days} jour${days > 1 ? "s" : ""}.` : "Étapes relevées lors de vos analyses.",
+    journey.obstacleSteps > 0
+      ? `${journey.obstacleSteps} page${journey.obstacleSteps > 1 ? "s" : ""} portai${
+          journey.obstacleSteps > 1 ? "ent" : "t"
+        } un obstacle explicite.`
+      : "Aucune de ces pages ne posait d’obstacle explicite.",
+    "Seules les pages que vous avez analysées figurent ici."
+  ].join(" ");
+
+  els.journeySteps.replaceChildren();
+  for (const step of journey.steps) {
+    const item = document.createElement("li");
+    item.className = "journey-step";
+    if (step.obstacles?.length) item.dataset.obstacle = "true";
+
+    const path = document.createElement("p");
+    path.className = "journey-path";
+    path.textContent = step.path;
+
+    const note = document.createElement("p");
+    note.className = "journey-note";
+    note.textContent = step.obstacles?.length ? step.obstacles.join(" · ") : "Page du parcours, sans obstacle relevé";
+
+    item.append(path, note);
+    els.journeySteps.append(item);
+  }
 };
 
 const TRUST_BADGES = { trusted: "✓", caution: "!", risky: "⚠" };
@@ -758,6 +838,16 @@ const reportAsText = () => {
     ""
   ];
 
+  if (state.journey) {
+    lines.push(
+      `PARCOURS DE RÉSILIATION — ${state.journey.pages} pages analysées sur ${state.journey.host}`,
+      ...state.journey.steps.map(
+        (step) => `   ${step.path}${step.obstacles?.length ? ` — ${step.obstacles.join(" · ")}` : ""}`
+      ),
+      ""
+    );
+  }
+
   if (state.media) {
     const { media } = state;
     lines.push(
@@ -811,6 +901,7 @@ els.securityAnalysis.addEventListener("change", persistSettings);
 els.mediaOwnership.addEventListener("change", persistSettings);
 els.compareCounters.addEventListener("change", persistSettings);
 els.useFeedback.addEventListener("change", persistSettings);
+els.trackJourney.addEventListener("change", persistSettings);
 
 els.toggleDismissed.addEventListener("click", () => {
   state.showDismissed = !state.showDismissed;
@@ -825,7 +916,7 @@ els.trustToggle.addEventListener("click", () => {
 });
 
 els.clearHistoryButton.addEventListener("click", async () => {
-  await chrome.storage.local.remove([KNOWN_HOSTS_KEY, COUNTERS_KEY, FEEDBACK_KEY]);
+  await chrome.storage.local.remove([KNOWN_HOSTS_KEY, COUNTERS_KEY, FEEDBACK_KEY, JOURNEY_KEY]);
   showToast("Données locales effacées");
 });
 
