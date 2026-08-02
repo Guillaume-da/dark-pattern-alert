@@ -97,7 +97,7 @@ Le score de confiance part de 100 et descend selon les signaux trouvés : **≥ 
   <tr>
     <td width="46%"><img src="docs/screenshots/07-media-ownership.png" alt="Carte éditeur et financement" /></td>
     <td width="54%" valign="top">
-      <p>Sur les médias répertoriés (~70 titres français et internationaux), le panneau indique <strong>qui possède le titre</strong>, à quel groupe il appartient et <strong>comment il est financé</strong> : capitaux privés, service public, coopérative, association, fonds de dotation.</p>
+      <p>Sur les médias répertoriés (71 titres français et internationaux, 108 domaines), le panneau indique <strong>qui possède le titre</strong>, à quel groupe il appartient et <strong>comment il est financé</strong> : capitaux privés, service public, coopérative, association, fonds de dotation.</p>
       <p>Ces informations sont <strong>strictement factuelles</strong>. L’extension ne classe aucun média sur un axe politique et ne note pas sa ligne éditoriale : elle donne de quoi se faire soi-même une opinion. La carte n’entre dans aucun score.</p>
     </td>
   </tr>
@@ -114,6 +114,15 @@ Les données sont un instantané daté, embarqué dans `media-ownership.js`. L�
       <p>Le panneau ouvre sur la <strong>confiance accordée au site</strong>, puis liste les procédés trompeurs de la page.</p>
       <p>Les signaux se filtrent par catégorie, se surlignent dans la page, et le rapport entier se copie en texte brut — pratique pour un signalement ou une capture d’historique.</p>
     </td>
+  </tr>
+</table>
+
+Le panneau suit l’apparence du système, clair ou sombre :
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/01-extension-welcome-dark.png" alt="Accueil du panneau en thème sombre" /></td>
+    <td width="50%"><img src="docs/screenshots/05-site-reputation-dark.png" alt="Carte de réputation en thème sombre" /></td>
   </tr>
 </table>
 
@@ -184,7 +193,7 @@ Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`
 Tout le nécessaire pour le Chrome Web Store est dans [`store/`](store/) :
 
 - [`store/LISTING.md`](store/LISTING.md) — le texte de chaque champ, prêt à coller, avec son compte de caractères, les justifications de permission et les déclarations de confidentialité ;
-- [`store/PUBLISHING.md`](store/PUBLISHING.md) — la marche à suivre, ce qui bloque encore, et les motifs de rejet qui guettent ce projet en particulier ;
+- [`store/PUBLISHING.md`](store/PUBLISHING.md) — la marche à suivre onglet par onglet, l’état des prérequis du compte développeur, et les motifs de rejet qui guettent ce projet en particulier ;
 - `store/assets/` — les cinq captures 1280 × 800, la tuile 440 × 280 et la bannière 1440 × 560.
 
 ```sh
@@ -208,8 +217,11 @@ Les résultats sont des **indices explicables, pas des preuves**.
 
 ## Prochaines étapes produit
 
-- comparer le comportement d’un compteur entre deux visites ;
-- détecter les coûts ajoutés au dernier moment ;
-- analyser les parcours de résiliation sur plusieurs pages ;
-- permettre de confirmer ou d’infirmer un signal pour affiner les règles localement ;
-- préparer la fiche Chrome Web Store et compléter la politique de confidentialité avec les coordonnées de l’éditeur.
+La feuille de route initiale est terminée : comparaison des compteurs entre deux visites, coûts ajoutés au dernier moment, parcours de résiliation, jugement des signaux par l’utilisateur, fiche Chrome Web Store et politique de confidentialité complétée.
+
+Pistes ouvertes :
+
+- **identité d’un compteur plus robuste** — une page qui régénère ses classes à chaque chargement échappe encore au rapprochement entre deux visites ;
+- **frais révélés à l’étape suivante** — aujourd’hui seuls les frais déjà affichés sont additionnés ;
+- **table des médias** — l’élargir, et prévoir une mise à jour indépendante des versions de l’extension, l’actionnariat changeant plus vite que le code ;
+- **traduction** — l’interface et les règles de détection sont uniquement en français.
