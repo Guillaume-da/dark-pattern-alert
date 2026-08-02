@@ -208,7 +208,7 @@ const runScan = async () => {
     });
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ["content-scanner.js"]
+      files: ["detector-rules.js", "content-scanner.js"]
     });
 
     const response = await chrome.tabs.sendMessage(tab.id, {

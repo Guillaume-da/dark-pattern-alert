@@ -136,7 +136,7 @@ npm run capture:system-chrome   # idem, avec un Chrome déjà installé
 | `site-probe.js` | relève les faits de sécurité observables, sans les interpréter |
 | `reputation-rules.js` | calcule le score de confiance ; logique pure, testable hors navigateur |
 | `media-ownership.js` | table d’actionnariat et de financement des médias, et sa recherche par domaine |
-| `detector-rules.js` | expressions de détection partagées avec les tests |
+| `detector-rules.js` | source unique des expressions de détection, lue par le scanner et vérifiée par les tests |
 
 Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`) permet de tester tout le raisonnement sous Node, sans navigateur.
 
