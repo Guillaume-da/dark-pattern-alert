@@ -83,7 +83,7 @@ Un onglet incomplet empêche la soumission et le bouton indique lequel.
 
 ---
 
-## Ce qui bloque aujourd’hui
+## Points tranchés, et le seul qui reste
 
 1. ~~`PRIVACY.md` n’a pas de coordonnées d’éditeur.~~ **Réglé** : le fichier porte
    une section « Contact » avec l’adresse `guillaume.dallolmo+dpa@gmail.com`.
@@ -91,9 +91,10 @@ Un onglet incomplet empêche la soumission et le bouton indique lequel.
    confirmer que l’adresse qui y figure est bien `guillaume.dallolmo+dpa@gmail.com`
    et qu’elle est vérifiée. C’est la seule chose que l’examen peut opposer à la
    politique de confidentialité.
-3. **Version `0.1.0`.** Rien ne l’interdit, mais une première publication est
-   généralement en `1.0.0`. Décidez avant de construire l’archive : le numéro
-   figure dans son nom, et une version publiée ne peut jamais être réutilisée.
+3. ~~Version `0.1.0`.~~ **Tranché** : on publie en `0.1.0`. Le numéro est cohérent
+   avec l’état du projet et annonce honnêtement une première version. Conséquence à
+   retenir : `0.1.0` est désormais brûlé, la prochaine soumission devra porter un
+   numéro strictement supérieur.
 
 ---
 

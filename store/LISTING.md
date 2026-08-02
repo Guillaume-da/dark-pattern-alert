@@ -217,6 +217,7 @@ Ces trois points ne peuvent pas être décidés à votre place.
 2. **Adresse e-mail de contact vérifiée** dans le compte développeur, onglet
    « Account ». Google la rend publique sur la fiche. Utilisez la même adresse que
    dans `PRIVACY.md`, sinon un examinateur relève l’incohérence.
-3. **Numéro de version.** Le manifeste est en `0.1.0`. Une première publication est
-   souvent passée en `1.0.0` : `manifest.json` → clé `version`, puis
-   `npm run package` pour reconstruire l’archive au bon nom.
+3. ~~Numéro de version.~~ **Tranché** : première publication en `0.1.0`, assumée
+   comme telle. La fiche affichera « Version 0.1.0 ». Toute mise à jour devra
+   porter un numéro strictement supérieur — `0.1.1`, `0.2.0`, `1.0.0` — un numéro
+   publié ne pouvant jamais être réutilisé.
