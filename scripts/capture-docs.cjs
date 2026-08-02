@@ -203,6 +203,16 @@ const renderResults = async (page, report) => {
     await renderTrust(panel, trust);
     await panel.screenshot({ path: path.join(outputRoot, "04-analysis-results.png"), fullPage: true });
 
+    await panel.locator("#trustCard").screenshot({ path: path.join(outputRoot, "05-site-reputation.png") });
+
+    await panel.evaluate(() => {
+      document.querySelector("#settingsPanel").hidden = false;
+      document.querySelector("#settingsButton").setAttribute("aria-expanded", "true");
+      document.querySelector("#resultsState").hidden = true;
+      document.querySelector("#welcomeState").hidden = true;
+    });
+    await panel.locator("#settingsPanel").screenshot({ path: path.join(outputRoot, "06-settings.png") });
+
     console.log(`Captures générées : ${outputRoot}`);
     console.log(`Signaux utilisés dans le rapport : ${report.findings.length}, score ${report.score}/100`);
     console.log(`Confiance du site : ${trust.score}/100 (${trust.label}), ${trust.alertCount} alerte(s)`);

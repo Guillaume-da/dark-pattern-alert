@@ -1,86 +1,143 @@
 # Dark Pattern Alert
 
-Extension Chrome Manifest V3 qui repère des signaux d’interfaces trompeuses et les explique dans un panneau latéral.
+Extension Chrome (Manifest V3) qui répond à deux questions sur la page ouverte :
 
-## MVP
+1. **Cette interface essaie-t-elle de m’influencer ?** — cases précochées, faux compteurs, boutons déséquilibrés, résiliation piégée.
+2. **Puis-je faire confiance à ce site ?** — identité du domaine, chiffrement, formulaires, cadres tiers, mentions légales.
 
-- choix et options commerciales précochés ;
-- compteurs d’urgence suspects ;
-- formulations culpabilisantes et choix visuellement déséquilibrés ;
-- renouvellements automatiques et démarches de résiliation contraignantes ;
-- score indicatif, niveau de confiance et surlignage dans la page ;
-- rapport copiable ;
-- traitement entièrement local, à la demande.
+Tout est calculé **dans le navigateur, à la demande**. Aucune donnée n’est envoyée nulle part, aucun service de réputation externe n’est interrogé.
 
-## Réputation et sécurité du site
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/01-extension-welcome.png" alt="Écran d’accueil du panneau latéral" /></td>
+    <td width="50%"><img src="docs/screenshots/05-site-reputation.png" alt="Carte de réputation et de sécurité du site" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>L’analyse ne démarre qu’à votre demande.</em></td>
+    <td align="center"><em>Chaque signal est expliqué, jamais un simple verdict.</em></td>
+  </tr>
+</table>
 
-Chaque analyse produit aussi un score de confiance sur 100 pour le site lui-même, calculé sans aucun appel réseau.
+## Installer en mode développeur
 
-Identité du domaine :
+1. Ouvrir `chrome://extensions`.
+2. Activer **Mode développeur**.
+3. Cliquer sur **Charger l’extension non empaquetée**.
+4. Choisir le dossier `dark-pattern-alert`.
+5. Épingler l’extension, ouvrir un site, cliquer sur son icône : le panneau latéral s’ouvre.
+
+Chrome 114 minimum (API `sidePanel`).
+
+## Ce que l’extension repère
+
+### 1. Interfaces trompeuses
+
+| Catégorie | Exemples détectés |
+| --- | --- |
+| **Choix précoché** | case cochée par défaut, surtout sur une option commerciale (newsletter, assurance, abonnement) |
+| **Urgence artificielle** | compte à rebours, « dernière chance », « offre limitée » dans un contexte marchand |
+| **Interface trompeuse** | refus culpabilisant (« Non merci, je préfère payer plus cher »), bouton d’acceptation nettement plus visible que le refus |
+| **Abonnement et résiliation** | renouvellement automatique, résiliation exigeant un appel ou un courrier, résiliation en ligne impossible |
+
+Chaque détection porte une **sévérité**, un **niveau de confiance** et l’extrait de page qui l’a déclenchée. Le bouton « Voir dans la page » fait défiler jusqu’à l’élément et l’encadre.
+
+### 2. Réputation et sécurité du site
+
+**Identité du domaine**
 
 - connexion non chiffrée (HTTP), port inhabituel, identifiants intégrés à l’URL ;
 - adresse IP nue au lieu d’un nom de domaine ;
 - domaine en punycode (`xn--`), qui permet les attaques homographes ;
-- imitation de marque : orthographe très proche d’une marque connue, ou nom de marque placé dans un domaine tiers (`paypal.secure-checkout.net`) ;
+- **imitation de marque** : orthographe très proche d’une marque connue (`paypa1.com`), ou nom de marque placé dans un domaine tiers (`paypal.secure-checkout.net`) ;
 - accumulation de mots d’appât (`verify`, `login`, `compte`…), extension à faible réputation, empilement de sous-domaines.
 
-Sécurité de la page :
+**Sécurité de la page**
 
 - mot de passe ou champs de carte bancaire demandés hors HTTPS ;
 - formulaire postant en HTTP ou vers un autre domaine, en particulier avec des identifiants ;
 - contenu mixte actif (scripts ou feuilles de style en HTTP sur une page HTTPS) ;
-- iframes tierces masquées, nombre de domaines tiers exécutant du code, scripts embarqués obfusqués ;
+- cadres tiers masqués, nombre de domaines tiers exécutant du code, scripts embarqués réellement obfusqués ;
 - absence de mentions légales, CGV ou contact sur une page marchande.
 
-Le détail des vérifications se déplie dans le panneau et figure dans le rapport copié. Deux réglages encadrent la fonctionnalité : **Analyse de sécurité du site** (activable/désactivable) et **Mémoriser les domaines analysés**, qui sert uniquement à signaler une première visite et se vide depuis les réglages.
+Le score de confiance part de 100 et descend selon les signaux trouvés : **≥ 80** aucun signal d’alerte, **55–79** prudence recommandée, **< 55** signaux préoccupants.
 
-## Tests
+## Le rapport
 
-```sh
-npm test                 # les deux suites
-node test-rules.js       # règles de détection des dark patterns
-node test-reputation.js  # règles de réputation et de sécurité
-```
+<table>
+  <tr>
+    <td width="58%"><img src="docs/screenshots/04-analysis-results.png" alt="Rapport complet dans le panneau latéral" /></td>
+    <td width="42%" valign="top">
+      <p>Le panneau ouvre sur la <strong>confiance accordée au site</strong>, puis liste les procédés trompeurs de la page.</p>
+      <p>Les signaux se filtrent par catégorie, se surlignent dans la page, et le rapport entier se copie en texte brut — pratique pour un signalement ou une capture d’historique.</p>
+    </td>
+  </tr>
+</table>
 
-Les captures de `docs/` se régénèrent avec `npm install && npm run capture` (Playwright), ou `npm run capture:system-chrome` pour réutiliser un Chrome déjà installé.
+Les éléments signalés sont encadrés directement dans la page :
 
-## Installer en mode développeur
+<img src="docs/screenshots/03-page-highlights.png" alt="Éléments suspects surlignés dans la page de démonstration" width="720" />
 
-1. Ouvrir `chrome://extensions` dans Chrome.
-2. Activer **Mode développeur**.
-3. Cliquer sur **Charger l’extension non empaquetée**.
-4. Choisir le dossier `dark-pattern-alert`.
-5. Épingler l’extension, ouvrir une page web, puis cliquer sur son icône.
+## Vie privée
 
-Pour tester tous les détecteurs, ouvrir `demo/index.html` via un petit serveur local. Par exemple, depuis le dossier du projet :
+<table>
+  <tr>
+    <td width="46%"><img src="docs/screenshots/06-settings.png" alt="Panneau de réglages" /></td>
+    <td width="54%" valign="top">
+      <p>L’extension demande <code>activeTab</code>, <code>scripting</code>, <code>sidePanel</code> et <code>storage</code> — rien de plus. Elle n’observe pas la navigation en arrière-plan et n’ouvre aucune connexion réseau.</p>
+      <p><strong>Mémoriser les domaines analysés</strong> conserve au plus 500 noms de domaine sur lesquels une analyse a été explicitement lancée, uniquement pour signaler une première visite. Ni URL complète, ni horodatage, ni contenu de page. Désactivable avant toute analyse, effaçable d’un clic.</p>
+    </td>
+  </tr>
+</table>
+
+Détail complet dans [`PRIVACY.md`](PRIVACY.md).
+
+## Page de démonstration
+
+`demo/index.html` rassemble volontairement des cases précochées, un compteur d’urgence, une résiliation par téléphone, un formulaire de paiement envoyé en HTTP vers un domaine tiers et un cadre de suivi masqué.
+
+Depuis le dossier **parent** du projet :
 
 ```sh
 python3 -m http.server 8080
 ```
 
-Puis visiter `http://localhost:8080/dark-pattern-alert/demo/`.
+Puis ouvrir `http://localhost:8080/dark-pattern-alert/demo/` et lancer l’analyse.
 
-## Architecture
+<img src="docs/screenshots/02-demo-page.png" alt="Page de démonstration" width="720" />
 
-- `background.js` ouvre le panneau latéral depuis l’icône Chrome ;
-- `sidepanel.*` contient l’interface et orchestre l’analyse ;
-- `content-scanner.js` applique les règles de détection dans la page ;
-- `content-overlay.css` affiche les éléments signalés ;
-- `site-probe.js` relève les faits de sécurité observables (formulaires, cadres, scripts, liens légaux) sans les interpréter ;
-- `reputation-rules.js` calcule le score de confiance à partir de l’URL et de ces faits ; logique pure, testable hors navigateur.
+## Développement
 
-L’extension utilise seulement `activeTab`, `scripting`, `sidePanel` et `storage`. Elle n’observe pas la navigation en arrière-plan et n’envoie aucun contenu à un serveur.
+```sh
+npm test                 # les deux suites de règles
+npm run capture          # régénère les captures de docs/ (Playwright)
+npm run capture:system-chrome   # idem, avec un Chrome déjà installé
+```
+
+| Fichier | Rôle |
+| --- | --- |
+| `background.js` | ouvre le panneau latéral au clic sur l’icône |
+| `sidepanel.html` / `.js` / `.css` | interface, orchestration de l’analyse, rendu du rapport |
+| `content-scanner.js` | applique les règles de dark patterns dans la page |
+| `content-overlay.css` | encadre les éléments signalés |
+| `site-probe.js` | relève les faits de sécurité observables, sans les interpréter |
+| `reputation-rules.js` | calcule le score de confiance ; logique pure, testable hors navigateur |
+| `detector-rules.js` | expressions de détection partagées avec les tests |
+
+Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`) permet de tester tout le raisonnement sous Node, sans navigateur.
 
 ## Limites assumées
 
-Les résultats sont des indices explicables, pas des preuves. Un compteur ne peut notamment pas être qualifié de faux à partir d’un seul instantané : l’extension invite donc l’utilisateur à le vérifier. Les sites rendus dans des iframes ou des composants fermés peuvent aussi échapper à l’analyse.
+Les résultats sont des **indices explicables, pas des preuves**.
 
-L’analyse de réputation hérite des limites du choix « tout local » : sans base de signalements ni WHOIS, elle ne connaît ni l’âge du domaine ni les campagnes de phishing en cours. Un score de 100 signifie « aucune anomalie détectable localement », pas « site vérifié ». La liste de marques est restreinte et le domaine enregistré est extrait avec une table de suffixes abrégée, ce qui laisse passer des imitations et peut signaler à tort un domaine légitime portant un nom de marque (filiale, revendeur, partenaire).
+- Un compteur ne peut pas être qualifié de faux à partir d’un seul instantané : l’extension invite à le vérifier plutôt qu’à conclure.
+- Les contenus rendus dans des iframes ou des composants fermés échappent à l’analyse.
+- Sans base de signalements ni WHOIS, l’analyse de réputation ignore l’âge du domaine et les campagnes d’hameçonnage en cours. **Un score de 100 signifie « rien d’anormal détectable localement », pas « site vérifié ».**
+- La liste de marques est restreinte et le domaine enregistré est extrait avec une table de suffixes abrégée : des imitations passent, et un domaine légitime portant un nom de marque (filiale, revendeur) peut être signalé à tort.
 
 ## Prochaines étapes produit
 
 - comparer le comportement d’un compteur entre deux visites ;
 - détecter les coûts ajoutés au dernier moment ;
 - analyser les parcours de résiliation sur plusieurs pages ;
-- permettre de confirmer ou d’infirmer un signal pour améliorer les règles localement ;
-- préparer les captures, la fiche Store et une politique de confidentialité publique.
+- permettre de confirmer ou d’infirmer un signal pour affiner les règles localement ;
+- préparer la fiche Chrome Web Store et compléter la politique de confidentialité avec les coordonnées de l’éditeur.
