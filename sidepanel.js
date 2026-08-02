@@ -13,6 +13,7 @@ const els = {
   autoHighlight: document.querySelector("#autoHighlight"),
   securityAnalysis: document.querySelector("#securityAnalysis"),
   mediaOwnership: document.querySelector("#mediaOwnership"),
+  compareCounters: document.querySelector("#compareCounters"),
   mediaCard: document.querySelector("#mediaCard"),
   mediaEyebrow: document.querySelector("#mediaEyebrow"),
   mediaName: document.querySelector("#mediaName"),
@@ -66,6 +67,74 @@ const state = {
 
 const KNOWN_HOSTS_KEY = "dpaKnownHosts";
 const KNOWN_HOSTS_LIMIT = 500;
+const COUNTERS_KEY = "dpaCounters";
+const COUNTERS_PAGE_LIMIT = 200;
+
+// Verdicts rendus par la comparaison entre deux visites. Un décompte honnête
+// perd exactement le temps écoulé ; les autres cas sont des constats, plus
+// seulement des soupçons.
+const COUNTER_VERDICTS = {
+  reset: {
+    title: "Compteur réarmé entre deux visites",
+    detail: (info) =>
+      `Lors de votre passage précédent, il restait ${formatDuration(info.previousSeconds)}. ${formatDuration(
+        info.elapsed
+      )} plus tard, il en affiche davantage : ce décompte est remis à zéro, il ne mesure aucune échéance réelle.`,
+    severity: "high",
+    confidence: 0.97
+  },
+  restarted: {
+    title: "Compteur relancé après son terme",
+    detail: (info) =>
+      `Il devait atteindre zéro il y a ${formatDuration(Math.abs(info.expected))}, et il tourne encore. L’échéance annoncée n’en est pas une.`,
+    severity: "high",
+    confidence: 0.96
+  },
+  stalled: {
+    title: "Compteur qui ne suit pas le temps réel",
+    detail: (info) =>
+      `Après ${formatDuration(info.elapsed)}, il devrait afficher ${formatDuration(
+        Math.max(0, info.expected)
+      )} ; il en affiche ${formatDuration(info.currentSeconds)}. L’écart ne s’explique pas par un décompte honnête.`,
+    severity: "high",
+    confidence: 0.9
+  },
+  faster: {
+    title: "Compteur plus rapide que le temps réel",
+    detail: (info) =>
+      `Après ${formatDuration(info.elapsed)}, il affiche ${formatDuration(
+        info.currentSeconds
+      )} au lieu de ${formatDuration(Math.max(0, info.expected))} : la pression est accélérée artificiellement.`,
+    severity: "medium",
+    confidence: 0.82
+  },
+  consistent: {
+    title: "Compteur cohérent avec votre visite précédente",
+    detail: (info) =>
+      `Il a perdu le temps réellement écoulé depuis ${formatDuration(info.elapsed)}. Rien n’indique une échéance fabriquée.`,
+    severity: "low",
+    confidence: 0.88
+  }
+};
+
+const formatDuration = (seconds) => {
+  const total = Math.max(0, Math.round(seconds));
+  if (total < 60) return `${total} s`;
+  const minutes = Math.round(total / 60);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} h ${rest} min` : `${hours} h`;
+};
+
+const pageKey = (url = "") => {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return "";
+  }
+};
 
 const categoryPresentation = {
   preselection: { label: "Choix précoché", icon: "✓" },
@@ -113,6 +182,7 @@ const persistSettings = async () => {
       autoHighlight: els.autoHighlight.checked,
       securityAnalysis: els.securityAnalysis.checked,
       mediaOwnership: els.mediaOwnership.checked,
+      compareCounters: els.compareCounters.checked,
       rememberSites: els.rememberSites.checked
     }
   });
@@ -125,6 +195,7 @@ const loadSettings = async () => {
   els.autoHighlight.checked = dpaSettings.autoHighlight !== false;
   els.securityAnalysis.checked = dpaSettings.securityAnalysis !== false;
   els.mediaOwnership.checked = dpaSettings.mediaOwnership !== false;
+  els.compareCounters.checked = dpaSettings.compareCounters !== false;
   els.rememberSites.checked = dpaSettings.rememberSites !== false;
   els.highlightToggle.checked = els.autoHighlight.checked;
 };
@@ -223,6 +294,7 @@ const runScan = async () => {
     }
 
     state.report = response.report;
+    await applyCounterHistory(state.report);
     state.trust = await runSecurityAnalysis(tab);
     state.media = els.mediaOwnership.checked
       ? globalThis.__dpaMediaOwnership.lookupMedia(response.report.url || tab.url)
@@ -240,6 +312,57 @@ const runScan = async () => {
   } finally {
     stopLoadingMessages();
   }
+};
+
+// Compare chaque décompte au relevé de la visite précédente, puis enregistre
+// le relevé du jour. Rien ne sort du navigateur ; seules les pages portant un
+// compteur sont mémorisées.
+const applyCounterHistory = async (report) => {
+  const counters = report.findings.filter((finding) => finding.counter);
+  if (!els.compareCounters.checked || counters.length === 0) return;
+
+  const key = pageKey(report.url);
+  if (!key) return;
+
+  const { compareCounter, calculateScore } = globalThis.__dpaDetectorRules;
+  const stored = await chrome.storage.local.get(COUNTERS_KEY);
+  const history = stored[COUNTERS_KEY] && typeof stored[COUNTERS_KEY] === "object" ? stored[COUNTERS_KEY] : {};
+  const previousPage = history[key] || {};
+  const now = Date.now();
+  const nextPage = {};
+
+  for (const finding of counters) {
+    const { key: counterKey, seconds } = finding.counter;
+    const previous = previousPage[counterKey];
+    const outcome = compareCounter(previous, seconds, now);
+    const presentation = COUNTER_VERDICTS[outcome.verdict];
+
+    if (presentation) {
+      const info = {
+        ...outcome,
+        currentSeconds: seconds,
+        previousSeconds: previous?.seconds ?? seconds
+      };
+      finding.title = presentation.title;
+      finding.detail = presentation.detail(info);
+      finding.severity = presentation.severity;
+      finding.confidence = presentation.confidence;
+      finding.verdict = outcome.verdict;
+    } else if (outcome.verdict === "first") {
+      finding.detail = `${finding.detail} Ce relevé est enregistré : la prochaine analyse dira s’il repart en arrière.`;
+      finding.verdict = "first";
+    } else {
+      finding.verdict = outcome.verdict;
+    }
+
+    nextPage[counterKey] = { seconds, observedAt: now };
+  }
+
+  report.score = calculateScore(report.findings);
+
+  const pages = { ...history, [key]: { ...previousPage, ...nextPage } };
+  const trimmed = Object.fromEntries(Object.entries(pages).slice(-COUNTERS_PAGE_LIMIT));
+  await chrome.storage.local.set({ [COUNTERS_KEY]: trimmed });
 };
 
 // L’analyse de réputation reste locale : identité du domaine, transport et
@@ -554,6 +677,7 @@ els.closeSettingsButton.addEventListener("click", () => {
 els.includeLowConfidence.addEventListener("change", persistSettings);
 els.securityAnalysis.addEventListener("change", persistSettings);
 els.mediaOwnership.addEventListener("change", persistSettings);
+els.compareCounters.addEventListener("change", persistSettings);
 els.rememberSites.addEventListener("change", persistSettings);
 
 els.trustToggle.addEventListener("click", () => {
@@ -563,8 +687,8 @@ els.trustToggle.addEventListener("click", () => {
 });
 
 els.clearHistoryButton.addEventListener("click", async () => {
-  await chrome.storage.local.remove(KNOWN_HOSTS_KEY);
-  showToast("Domaines mémorisés effacés");
+  await chrome.storage.local.remove([KNOWN_HOSTS_KEY, COUNTERS_KEY]);
+  showToast("Données locales effacées");
 });
 
 els.autoHighlight.addEventListener("change", async () => {

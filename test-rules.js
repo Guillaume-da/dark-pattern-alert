@@ -77,3 +77,39 @@ assert.match("Jusqu'au 12/09/2026", patterns.scheduleMarker);
 assert.doesNotMatch("00:09:42", patterns.scheduleMarker);
 assert.doesNotMatch("Plus que 02:15", patterns.scheduleMarker);
 console.log("Horaires distingués des décomptes.");
+
+// Lecture d'un décompte
+const { parseCountdown, compareCounter, calculateScore } = require("./detector-rules.js");
+assert.equal(parseCountdown("00:09:42"), 582);
+assert.equal(parseCountdown("09:42"), 582);
+assert.equal(parseCountdown("Plus que 01:00:00"), 3600);
+assert.equal(parseCountdown("aucun chiffre"), null);
+assert.equal(parseCountdown("00:00"), null);
+
+// Comparaison entre deux visites
+const t0 = 1_700_000_000_000;
+const at = (minutes) => t0 + minutes * 60_000;
+const before = (seconds, minutes) => ({ seconds, observedAt: at(-minutes) });
+
+assert.equal(compareCounter(null, 600, t0).verdict, "first");
+assert.equal(compareCounter(before(600, 0.5), 600, t0).verdict, "too-soon");
+// Décompte honnête : il perd exactement le temps écoulé
+assert.equal(compareCounter(before(900, 5), 600, t0).verdict, "consistent");
+// Il en affiche davantage qu'à la visite précédente
+assert.equal(compareCounter(before(600, 5), 900, t0).verdict, "reset");
+// Il aurait dû atteindre zéro depuis longtemps et tourne encore
+assert.equal(compareCounter(before(600, 20), 300, t0).verdict, "restarted");
+// Il n'a pas bougé alors que le temps a passé
+assert.equal(compareCounter(before(900, 10), 880, t0).verdict, "stalled");
+// Il descend plus vite que le temps réel
+assert.equal(compareCounter(before(3600, 5), 60, t0).verdict, "faster");
+// La tolérance absorbe un écart de quelques secondes
+assert.equal(compareCounter(before(900, 5), 590, t0).verdict, "consistent");
+
+// Le score doit refléter une requalification en sévérité basse
+const withHigh = [{ category: "urgency", severity: "high", confidence: 0.9 }];
+const withLow = [{ category: "urgency", severity: "low", confidence: 0.88 }];
+assert.ok(calculateScore(withHigh) > calculateScore(withLow));
+assert.equal(calculateScore([]), 0);
+
+console.log("Décomptes lus et comparés entre deux visites.");

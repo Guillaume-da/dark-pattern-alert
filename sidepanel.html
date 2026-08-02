@@ -49,10 +49,14 @@
         <input id="mediaOwnership" type="checkbox" checked />
       </label>
       <label class="switch-row">
+        <span><strong>Comparer les compteurs</strong><small>Relever les décomptes pour repérer, à la visite suivante, ceux qui se réarment.</small></span>
+        <input id="compareCounters" type="checkbox" checked />
+      </label>
+      <label class="switch-row">
         <span><strong>Mémoriser les domaines analysés</strong><small>Sert uniquement à signaler une première visite. Rien ne sort du navigateur.</small></span>
         <input id="rememberSites" type="checkbox" checked />
       </label>
-      <button class="text-button danger" id="clearHistoryButton" type="button">Effacer les domaines mémorisés</button>
+      <button class="text-button danger" id="clearHistoryButton" type="button">Effacer les données locales</button>
     </aside>
 
     <main>
@@ -182,6 +186,7 @@
     </main>
 
     <div class="toast" id="toast" role="status" hidden>Rapport copié</div>
+    <script src="detector-rules.js"></script>
     <script src="reputation-rules.js"></script>
     <script src="media-ownership.js"></script>
     <script src="sidepanel.js"></script>
