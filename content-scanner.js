@@ -96,6 +96,9 @@
       visited += 1;
       const element = walker.currentNode;
       if (!usefulTags.has(element.tagName) || !isVisible(element)) continue;
+      // `textContent` absorbe le contenu des balises style et script : sans ce
+      // filtre, des règles CSS embarquées passent pour du texte de la page.
+      if (element.querySelector("style, script, noscript, template")) continue;
       if (element.childElementCount > 5 && !["DIV", "LI", "TD"].includes(element.tagName)) continue;
       const text = elementText(element, 520);
       if (text.length >= 3 && text.length <= 520) candidates.push(element);
@@ -237,7 +240,9 @@
 
     for (const control of controls) {
       const label = controlLabel(control);
-      if (!confirmShaming.test(label)) continue;
+      // Un libellé de refus tient en quelques mots. Au-delà, on lit un titre
+      // d’article ou un paragraphe cliquable, pas un bouton culpabilisant.
+      if (label.length > 90 || !confirmShaming.test(label)) continue;
       addFinding({
         category: "visual",
         title: "Refus formulé pour culpabiliser",
