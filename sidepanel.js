@@ -71,7 +71,8 @@ const categoryPresentation = {
   preselection: { label: "Choix précoché", icon: "✓" },
   urgency: { label: "Urgence", icon: "◷" },
   visual: { label: "Interface", icon: "◐" },
-  cancellation: { label: "Abonnement", icon: "↻" }
+  cancellation: { label: "Abonnement", icon: "↻" },
+  cost: { label: "Coûts ajoutés", icon: "€" }
 };
 
 const severityLabels = {
@@ -176,6 +177,7 @@ const startLoadingMessages = () => {
     "Vérification des compteurs et messages d’urgence",
     "Comparaison des boutons et choix proposés",
     "Lecture des conditions d’abonnement",
+    "Addition des frais ajoutés au total",
     "Contrôle du domaine et du chiffrement"
   ];
   let index = 0;

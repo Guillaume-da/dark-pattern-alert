@@ -84,7 +84,8 @@ const renderResults = async (page, report) => {
       preselection: { label: "Choix précoché", icon: "✓" },
       urgency: { label: "Urgence", icon: "◷" },
       visual: { label: "Interface", icon: "◐" },
-      cancellation: { label: "Abonnement", icon: "↻" }
+      cancellation: { label: "Abonnement", icon: "↻" },
+      cost: { label: "Coûts ajoutés", icon: "€" }
     };
     const severityLabels = { high: "Élevé", medium: "Modéré", low: "Faible" };
     const select = (selector) => document.querySelector(selector);
