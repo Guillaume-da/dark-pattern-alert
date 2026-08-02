@@ -16,6 +16,15 @@
     contact: /nous contacter|contactez[- ]nous|contact\b|service client|support client/i
   };
 
+  // Signatures d’obfuscation proprement dite. La minification seule ne suffit
+  // pas : la plupart des sites sérieux embarquent du code minifié légitime.
+  const OBFUSCATION_MARKERS = [
+    /_0x[0-9a-f]{4,}/,
+    /eval\s*\(\s*(?:atob|unescape|decodeURIComponent|function|String)/,
+    /(?:\\x[0-9a-f]{2}){8,}/i,
+    /String\.fromCharCode\((?:\s*\d+\s*,){10,}/
+  ];
+
   const COMMERCE_HINT =
     /panier|ajouter au panier|commander|passer commande|paiement|checkout|acheter|\d+[ ,]\d{2}\s*(?:€|eur|\$|usd)|add to (?:cart|bag)|buy now|place order|subscribe/i;
 
@@ -125,6 +134,7 @@
       }
       const code = script.textContent || "";
       if (code.length < 4000) continue;
+      if (!OBFUSCATION_MARKERS.some((marker) => marker.test(code))) continue;
       const whitespaceRatio = (code.match(/\s/g) || []).length / code.length;
       const longestLine = code.split("\n").reduce((longest, line) => Math.max(longest, line.length), 0);
       if (whitespaceRatio < 0.05 || longestLine > 3000) obfuscatedInlineScripts += 1;
