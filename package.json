@@ -8,7 +8,10 @@
     "capture": "node scripts/capture-docs.cjs",
     "capture:system-chrome": "node scripts/capture-docs-with-system-chrome.cjs",
     "capture:dark": "node scripts/capture-docs.cjs --scheme=dark",
-    "capture:all": "node scripts/capture-docs.cjs --scheme=both"
+    "capture:all": "node scripts/capture-docs.cjs --scheme=both",
+    "icons": "node scripts/build-icons.cjs",
+    "store:assets": "node scripts/build-store-assets.cjs",
+    "package": "node scripts/package-extension.cjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1"
