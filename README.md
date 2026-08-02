@@ -46,17 +46,19 @@ Chaque signal peut être jugé : **« Oui »** ou **« Non, l’écarter »**. U
 
 #### Compteurs : la comparaison entre deux visites
 
-Un décompte ne peut pas être qualifié de faux sur un seul instantané. L’extension relève donc sa valeur, localement, et la confronte à la visite suivante :
+Un décompte ne peut pas être qualifié de faux sur un seul instantané. L’extension relève donc sa valeur, localement, et la confronte à la visite suivante.
 
-| Verdict | Ce qui a été observé |
-| --- | --- |
-| **Compteur réarmé** | il affiche plus de temps qu’à la visite précédente |
-| **Compteur relancé après son terme** | il aurait dû atteindre zéro et tourne encore |
-| **Compteur qui ne suit pas le temps réel** | l’écart avec le temps écoulé ne s’explique pas |
-| **Compteur plus rapide que le temps réel** | il descend plus vite que l’horloge |
-| **Compteur cohérent** | il a perdu exactement le temps écoulé — la sévérité **baisse**, et le score avec elle |
+Les verdicts ci-dessous portent sur **le compteur affiché par le site analysé**, jamais sur le fonctionnement de l’extension :
 
-Le soupçon devient un constat daté, dans les deux sens : un compteur honnête est explicitement reconnu comme tel. Il faut au moins une minute entre deux analyses pour qu’un verdict soit rendu.
+| Verdict rendu sur le compteur du site | Ce qui a été observé | Ce que ça vous apprend |
+| --- | --- | --- |
+| **Compteur réarmé** | il affiche plus de temps qu’à la visite précédente | le site remet son décompte à zéro : l’échéance est fabriquée |
+| **Compteur relancé après son terme** | il aurait dû atteindre zéro et tourne encore | l’échéance annoncée n’en est pas une |
+| **Compteur qui ne suit pas le temps réel** | l’écart avec le temps écoulé ne s’explique pas | le décompte est décoratif |
+| **Compteur plus rapide que le temps réel** | il descend plus vite que l’horloge | la pression est accélérée artificiellement |
+| **Compteur cohérent** | il a perdu exactement le temps écoulé | **le compteur est honnête** — la sévérité baisse, et le score du site avec elle |
+
+Le soupçon devient un constat daté, **dans les deux sens** : l’extension sait disculper un compteur, pas seulement l’accuser. Un décompte cohérent passe de sévérité élevée à faible. Il faut au moins une minute entre deux analyses pour qu’un verdict soit rendu.
 
 ### 2. Réputation et sécurité du site
 
@@ -76,7 +78,7 @@ Le soupçon devient un constat daté, dans les deux sens : un compteur honnête 
 - cadres tiers masqués, nombre de domaines tiers exécutant du code, scripts embarqués réellement obfusqués ;
 - absence de mentions légales, CGV ou contact sur une page marchande.
 
-Le score de confiance part de 100 et descend selon les signaux trouvés : **≥ 80** aucun signal d’alerte, **55–79** prudence recommandée, **< 55** signaux préoccupants.
+Le score de confiance porte sur **le site analysé**. Il part de 100 et descend selon les signaux trouvés : **≥ 80** aucun signal d’alerte, **55–79** prudence recommandée, **< 55** signaux préoccupants.
 
 #### Parcours de résiliation, sur plusieurs pages
 
