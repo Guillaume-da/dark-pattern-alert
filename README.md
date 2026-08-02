@@ -215,6 +215,12 @@ Les résultats sont des **indices explicables, pas des preuves**.
 - La table des médias est un instantané embarqué : un rachat récent n’y figure pas, et un titre absent de la liste n’affiche aucune carte. Elle décrit l’actionnariat, jamais l’indépendance réelle d’une rédaction.
 - La liste de marques est restreinte et le domaine enregistré est extrait avec une table de suffixes abrégée : des imitations passent, et un domaine légitime portant un nom de marque (filiale, revendeur) peut être signalé à tort.
 
+## Licence
+
+[MIT](LICENSE) — Copyright (c) 2026 Guillaume Dall Olmo.
+
+Le code est librement réutilisable, y compris commercialement, à condition de conserver la mention de copyright. Cette licence rend praticable ce que la fiche promet : les affirmations de la politique de confidentialité sont vérifiables **et** le code peut être audité, forké, corrigé.
+
 ## Prochaines étapes produit
 
 La feuille de route initiale est terminée : comparaison des compteurs entre deux visites, coûts ajoutés au dernier moment, parcours de résiliation, jugement des signaux par l’utilisateur, fiche Chrome Web Store et politique de confidentialité complétée.
