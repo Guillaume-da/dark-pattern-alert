@@ -26,6 +26,18 @@ Le rapport s’ouvre sur la confiance accordée au site — identité du domaine
 
 ![Rapport détaillé produit par l’extension](screenshots/04-analysis-results.png)
 
+## Réputation et sécurité du site
+
+La carte de confiance ouvre le rapport et détaille chaque vérification : identité du domaine, chiffrement, formulaires, cadres tiers, informations légales.
+
+![Carte de réputation et de sécurité](screenshots/05-site-reputation.png)
+
+## Réglages
+
+Les quatre réglages tiennent dans un seul panneau, dont l’analyse de sécurité et la mémorisation des domaines analysés, effaçable d’un clic.
+
+![Panneau de réglages](screenshots/06-settings.png)
+
 ## Régénérer les captures
 
-Le script `scripts/capture-docs-with-system-chrome.cjs` recrée les quatre images avec Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.
+`npm run capture` recrée les six images avec le Chromium de Playwright, `npm run capture:system-chrome` avec un Chrome installé localement. Il utilise la page de démonstration et le moteur de détection réels, sans réseau ni données externes.
