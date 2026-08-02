@@ -11,12 +11,12 @@ Le compte développeur existe déjà : les 5 $ d’inscription et la création d
 sont derrière vous. Restent quatre vérifications, dans l’onglet **Account**
 du tableau de bord.
 
-| À vérifier | Pourquoi |
-| --- | --- |
-| Adresse e-mail de contact | Google la publie sur la fiche. Elle doit être **identique** à celle de `PRIVACY.md` — `guillaume.dallolmo+dpa@gmail.com` — sinon l’écart se remarque à l’examen. |
-| Statut de l’adresse | Elle doit apparaître comme *verified*. Une adresse non vérifiée bloque la soumission, sans toujours le dire clairement. |
-| Éditeur affiché | Le champ *Publisher name* est ce que verront les utilisateurs sous le nom de l’extension. Par défaut, Google y met le nom du compte Google. |
-| Vérification d’identité | Pour un éditeur situé dans l’Union européenne, le règlement sur les services numériques impose l’affichage de coordonnées de commerçant. Si Google ne l’a pas encore demandée, elle peut l’être au moment de la première soumission — pièce d’identité ou adresse postale, quelques jours de délai. |
+| Élément | Valeur | État |
+| --- | --- | --- |
+| Nom d’éditeur affiché | **Guillaume Dall Olmo** | confirmé — c’est ce qui apparaîtra sous le nom de l’extension |
+| Adresse e-mail de contact | **guillaume.dallolmo@gmail.com** | confirmée, et identique à celle de `PRIVACY.md` |
+| Statut de l’adresse | *verified* | à confirmer dans l’onglet **Account** : une adresse non vérifiée bloque la soumission sans toujours le dire clairement |
+| Vérification d’identité | — | Pour un éditeur situé dans l’Union européenne, le règlement sur les services numériques impose l’affichage de coordonnées de commerçant. Si Google ne l’a pas encore demandée, elle peut l’être à la première soumission : pièce d’identité ou adresse postale, quelques jours de délai. |
 
 Politique de confidentialité à coller dans la fiche :
 <https://github.com/Guillaume-da/dark-pattern-alert/blob/main/PRIVACY.md>
@@ -83,14 +83,14 @@ Un onglet incomplet empêche la soumission et le bouton indique lequel.
 
 ---
 
-## Points tranchés, et le seul qui reste
+## Points tranchés
 
 1. ~~`PRIVACY.md` n’a pas de coordonnées d’éditeur.~~ **Réglé** : le fichier porte
-   une section « Contact » avec l’adresse `guillaume.dallolmo+dpa@gmail.com`.
-2. **Adresse de contact du compte développeur.** Le compte existe ; il reste à
-   confirmer que l’adresse qui y figure est bien `guillaume.dallolmo+dpa@gmail.com`
-   et qu’elle est vérifiée. C’est la seule chose que l’examen peut opposer à la
-   politique de confidentialité.
+   une section « Contact » avec l’adresse `guillaume.dallolmo@gmail.com`.
+2. ~~Adresse de contact du compte développeur.~~ **Réglé** : le compte porte
+   `guillaume.dallolmo@gmail.com`, la même adresse que `PRIVACY.md`, sous le nom
+   d’éditeur **Guillaume Dall Olmo**. Reste à vérifier d’un coup d’œil que Google
+   la marque bien *verified*.
 3. ~~Version `0.1.0`.~~ **Tranché** : on publie en `0.1.0`. Le numéro est cohérent
    avec l’état du projet et annonce honnêtement une première version. Conséquence à
    retenir : `0.1.0` est désormais brûlé, la prochaine soumission devra porter un
