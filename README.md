@@ -207,7 +207,7 @@ Tout le nécessaire pour republier est dans [`store/`](store/) :
 
 - [`store/LISTING.md`](store/LISTING.md) — le texte de chaque champ, prêt à coller, avec son compte de caractères, les justifications de permission et les déclarations de confidentialité ;
 - [`store/PUBLISHING.md`](store/PUBLISHING.md) — la marche à suivre onglet par onglet, l’état des prérequis du compte développeur, et les motifs de rejet qui guettent ce projet en particulier ;
-- `store/assets/` — les cinq captures 1280 × 800, la tuile 440 × 280 et la bannière 1440 × 560.
+- `store/assets/` — les cinq captures 1280 × 800, la tuile 440 × 280 et la bannière 1400 × 560.
 
 ```sh
 npm run package        # archive à téléverser, fichiers exécutés uniquement

@@ -5,7 +5,7 @@
 //   node scripts/build-store-assets.cjs
 //
 // Produit store/assets/ : cinq captures 1280x800, une tuile promo 440x280 et
-// une bannière 1440x560.
+// une bannière 1400x560.
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -185,7 +185,7 @@ const marquee = `
 <!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><style>
   * { box-sizing: border-box; margin: 0; }
   body {
-    width: 1440px; height: 560px; display: flex; align-items: center; gap: 64px; padding: 0 92px; overflow: hidden;
+    width: 1400px; height: 560px; display: flex; align-items: center; gap: 64px; padding: 0 92px; overflow: hidden;
     background: radial-gradient(110% 140% at 8% 0%, #FFF3CF 0%, #F7F7F9 48%, #EAEAEE 100%);
     font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif; color: #1D1D1F;
     -webkit-font-smoothing: antialiased;
@@ -242,7 +242,7 @@ const shoot = async (browser, { html, name, width, height }) => {
       console.log(`1280×800  ${await shoot(browser, { ...screen, width: 1280, height: 800 })}`);
     }
     console.log(`440×280   ${await shoot(browser, { html: promoTile, name: "promo-tile-440x280.png", width: 440, height: 280 })}`);
-    console.log(`1440×560  ${await shoot(browser, { html: marquee, name: "marquee-1440x560.png", width: 1440, height: 560 })}`);
+    console.log(`1400×560  ${await shoot(browser, { html: marquee, name: "marquee-1400x560.png", width: 1400, height: 560 })}`);
     console.log(`\nAssets écrits dans ${outputRoot}`);
   } finally {
     await browser.close();

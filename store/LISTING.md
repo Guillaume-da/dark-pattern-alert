@@ -116,7 +116,7 @@ Tous les fichiers sont dans `store/assets/`, générés par `npm run store:asset
 | Store icon | 128 × 128 | `../icons/icon-128.png` | oui |
 | Screenshots (1 à 5) | 1280 × 800 | `01-rapport.png`, `02-reputation.png`, `03-medias.png`, `04-resiliation.png`, `05-confidentialite.png` | au moins 1 |
 | Small promo tile | 440 × 280 | `promo-tile-440x280.png` | non, mais requise pour toute mise en avant |
-| Marquee promo tile | 1440 × 560 | `marquee-1440x560.png` | non |
+| Marquee promo tile | 1400 × 560 | `marquee-1400x560.png` | non |
 
 Téléversez les cinq captures **dans cet ordre** : la première est celle que Google
 affiche en vignette de résultat de recherche.
