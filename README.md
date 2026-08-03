@@ -1,5 +1,7 @@
 # Dark Pattern Alert
 
+[**Installer depuis le Chrome Web Store**](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln)
+
 Extension Chrome (Manifest V3) qui répond à deux questions sur la page ouverte :
 
 1. **Cette interface essaie-t-elle de m’influencer ?** — cases précochées, faux compteurs, boutons déséquilibrés, résiliation piégée.
@@ -18,7 +20,11 @@ Tout est calculé **dans le navigateur, à la demande**. Aucune donnée n’est 
   </tr>
 </table>
 
-## Installer en mode développeur
+## Installer
+
+L’extension est publiée sur le Chrome Web Store : **[Dark Pattern Alert](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln)**. Un clic sur **Ajouter à Chrome** suffit ; épingler l’icône, ouvrir un site, cliquer dessus : le panneau latéral s’ouvre.
+
+### En mode développeur, depuis les sources
 
 1. Ouvrir `chrome://extensions`.
 2. Activer **Mode développeur**.
@@ -192,7 +198,9 @@ Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`
 
 ## Publication
 
-Tout le nécessaire pour le Chrome Web Store est dans [`store/`](store/) :
+La version 0.1.0 est en ligne sur le Chrome Web Store : [chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln).
+
+Tout le nécessaire pour republier est dans [`store/`](store/) :
 
 - [`store/LISTING.md`](store/LISTING.md) — le texte de chaque champ, prêt à coller, avec son compte de caractères, les justifications de permission et les déclarations de confidentialité ;
 - [`store/PUBLISHING.md`](store/PUBLISHING.md) — la marche à suivre onglet par onglet, l’état des prérequis du compte développeur, et les motifs de rejet qui guettent ce projet en particulier ;
