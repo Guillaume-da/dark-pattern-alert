@@ -115,6 +115,9 @@ const renderResults = async (page, report) => {
     select("#siteName").textContent = "slowgood.demo";
     select("#siteAvatar").textContent = "S";
     select("#scanTime").textContent = "Analysée à l’instant";
+    // Cas ordinaire : l'accès vient du clic sur l'icône et vaut pour cette page
+    // seulement. C'est l'état qu'on voit tant qu'on n'a pas autorisé le site.
+    select("#accessNote").hidden = false;
     select("#scoreValue").textContent = data.score;
     select("#scoreRing").style.setProperty("--score-angle", `${data.score * 3.6}deg`);
     select("#scoreRing").style.setProperty("--score-color", data.score >= 65 ? "#c83d3d" : "#b46b00");

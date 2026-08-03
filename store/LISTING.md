@@ -143,7 +143,7 @@ L’extension lit le contenu de l’onglet actif uniquement après que l’utili
 ### Justification des permissions d’hôte facultatives (`http://*/*`, `https://*/*`)
 
 ```
-Ces permissions ne sont pas demandées à l’installation : elles sont déclarées en optional_host_permissions et ne sont accordées que si l’utilisateur clique lui-même sur « Toujours autoriser ce site » ou « Autoriser sur tous les sites ». L’accès obtenu par activeTab retombe à chaque navigation, ce qui oblige sinon à cliquer sur l’icône avant chaque page analysée. L’autorisation ne change ni la nature ni le moment de la lecture : l’analyse ne démarre qu’à la demande explicite de l’utilisateur, rien n’est observé en arrière-plan et aucune donnée n’est transmise.
+Ces permissions ne sont pas demandées à l’installation : elles sont déclarées en optional_host_permissions et ne sont accordées que si l’utilisateur clique lui-même sur « Toujours autoriser » ou « Autoriser sur tous les sites ». L’accès obtenu par activeTab retombe à chaque navigation, ce qui oblige sinon à cliquer sur l’icône avant chaque page analysée. L’autorisation ne change ni la nature ni le moment de la lecture : l’analyse ne démarre qu’à la demande explicite de l’utilisateur, rien n’est observé en arrière-plan et aucune donnée n’est transmise.
 ```
 
 ### Justification de `scripting`

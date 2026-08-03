@@ -64,7 +64,8 @@ Dans l’ordre des onglets, avec `LISTING.md` ouvert à côté :
 
 1. **Store listing** — nom, résumé, description, catégorie, langue, puis les
    visuels du tableau de la section 2.
-2. **Privacy** — objectif unique, les quatre justifications de permission, la
+2. **Privacy** — objectif unique, les cinq justifications de permission — dont
+   celle des permissions d’hôte facultatives, champ apparu avec la `0.1.1` —, la
    déclaration d’absence de code distant, les cases d’utilisation des données,
    les trois attestations, l’URL de la politique de confidentialité.
 3. **Distribution** — visibilité, régions, gratuité.
