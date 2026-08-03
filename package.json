@@ -1,6 +1,6 @@
 {
   "name": "dark-pattern-alert",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Extension Chrome qui repère les interfaces trompeuses et évalue la réputation du site, entièrement en local.",
   "license": "MIT",

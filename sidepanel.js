@@ -266,6 +266,16 @@ const grantableOrigin = (url = "") => {
   }
 };
 
+const BROAD_ORIGINS = ["http://*/*", "https://*/*"];
+
+const hasBroadAccess = async () => {
+  try {
+    return await chrome.permissions.contains({ origins: BROAD_ORIGINS });
+  } catch {
+    return false;
+  }
+};
+
 const hasHostPermission = async (url = "") => {
   const origin = grantableOrigin(url);
   if (!origin) return false;
@@ -300,7 +310,7 @@ const userFacingError = (error, url = "") => {
       kind,
       title: "Chrome n’a pas ouvert cette page à l’extension",
       message:
-        "Cliquez sur l’icône Dark Pattern Alert dans la barre d’outils : Chrome accorde alors l’accès à l’onglet, le temps de cette page. Pour ne plus avoir à le faire, autorisez l’extension une fois pour toutes.",
+        "Cliquez sur l’icône Dark Pattern Alert dans la barre d’outils : Chrome accorde alors l’accès à l’onglet, le temps de cette page. Pour ne plus avoir à le faire, autorisez l’extension une fois pour toutes. Les pages internes du navigateur, elles, restent fermées à toute extension.",
       offerGrant: true
     };
   }
@@ -356,9 +366,15 @@ const runScan = async () => {
 
   try {
     tab = await currentTab();
-    // Sans autorisation, Chrome masque jusqu'à l'URL de l'onglet : une URL
-    // absente signale un défaut d'accès, pas une page interdite.
-    if (!tab.url) throw scanError("permission", "Tab URL hidden without host access.");
+    // Sans autorisation, Chrome masque jusqu'à l'URL de l'onglet. L'URL absente
+    // veut donc dire deux choses opposées : accès non accordé, ou page qu'aucune
+    // autorisation n'ouvrira. Les départager en regardant ce qui est déjà
+    // accordé — si tout http et https l'est, l'onglet n'en est pas.
+    if (!tab.url) {
+      throw (await hasBroadAccess())
+        ? scanError("restricted", "Tab URL hidden despite broad host access.")
+        : scanError("permission", "Tab URL hidden without host access.");
+    }
     if (!isScannableUrl(tab.url)) throw scanError("restricted", `Cannot access ${tab.url}`);
     state.activeTabId = tab.id;
 
@@ -959,7 +975,7 @@ els.rescanButton.addEventListener("click", runScan);
 // rapport. Aucune des deux ne change ce que l'extension fait de la page.
 els.grantAllButton.addEventListener("click", async () => {
   try {
-    const granted = await chrome.permissions.request({ origins: ["http://*/*", "https://*/*"] });
+    const granted = await chrome.permissions.request({ origins: BROAD_ORIGINS });
     if (granted) await runScan();
     else showToast("Autorisation refusée");
   } catch {
