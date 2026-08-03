@@ -103,7 +103,9 @@ Un onglet incomplet empêche la soumission et le bouton indique lequel.
    et des permissions d’hôte **facultatives** permettent d’accorder un accès durable,
    par site ou pour tous. Un champ de justification supplémentaire est donc à remplir
    dans l’onglet Confidentialité (texte prêt dans `LISTING.md`), et
-   `minimum_chrome_version` passe à `116`.
+   `minimum_chrome_version` passe à `116`. La description de la fiche est également à
+   recoller : elle porte le bloc **NOUVEAUTÉS — VERSION 0.1.1**, seul endroit où le
+   Web Store permet d’annoncer un changement.
 
 ---
 

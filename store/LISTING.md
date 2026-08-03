@@ -31,14 +31,25 @@ Repère les interfaces trompeuses et explique le risque, directement dans votre 
 
 ### Description détaillée — champ « Description »
 
-> Limite : 16 000 caractères. Actuel : **3 433**.
+> Limite : 16 000 caractères. Actuel : **4 144**.
 > Le champ n’accepte pas le Markdown : les tirets et les sauts de ligne ci-dessous
 > sont déjà du texte brut, collez tel quel.
+>
+> Le Chrome Web Store n’a pas de champ « nouveautés » : la description est le seul
+> endroit où annoncer un changement. Le bloc **NOUVEAUTÉS** ne vaut donc que pour
+> la version en cours — le remplacer à chaque publication, et le retirer quand il
+> n’apprend plus rien à personne.
 
 ```
 Dark Pattern Alert répond à deux questions sur la page que vous avez sous les yeux : cette interface essaie-t-elle de m’influencer, et puis-je faire confiance à ce site ?
 
 Tout est calculé dans votre navigateur, à votre demande. L’extension n’a pas de serveur, pas de compte, pas de télémétrie. Elle n’observe pas votre navigation : elle n’analyse une page que si vous cliquez sur son icône.
+
+NOUVEAUTÉS — VERSION 0.1.1
+
+• Correction majeure : la version 0.1.0 n’analysait aucune page. Le clic sur l’icône n’ouvrait pas l’accès à l’onglet et l’analyse s’arrêtait sur « Cette page est protégée par Chrome », sur tous les sites. C’est réparé.
+• Autorisation durable, facultative : pour ne plus avoir à cliquer sur l’icône avant chaque analyse, vous pouvez accorder l’accès à un site, ou à tous. Cette autorisation n’est jamais accordée à l’installation, se révoque à tout moment, et ne change ni ce que l’extension lit, ni le fait qu’elle n’envoie rien.
+• Messages d’erreur exacts : une page fermée à toute extension, un accès non accordé et une page qui ne répond pas ne se disent plus de la même façon.
 
 CE QU’ELLE REPÈRE DANS LA PAGE
 
