@@ -22,7 +22,9 @@ Tout est calculé **dans le navigateur, à la demande**. Aucune donnée n’est 
 
 ## Installer
 
-L’extension est publiée sur le Chrome Web Store : **[Dark Pattern Alert](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln)**. Un clic sur **Ajouter à Chrome** suffit ; épingler l’icône, ouvrir un site, cliquer dessus : le panneau latéral s’ouvre.
+L’extension est publiée sur le Chrome Web Store : **[Dark Pattern Alert](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln)**. Un clic sur **Ajouter à Chrome** suffit ; épingler l’icône, ouvrir un site, cliquer dessus : le panneau latéral s’ouvre et l’onglet devient analysable.
+
+Ce clic sur l’icône n’est pas décoratif : c’est lui qui accorde `activeTab`. Après une navigation, Chrome referme l’accès — recliquer sur l’icône, ou accorder une fois pour toutes la permission facultative proposée par le panneau.
 
 ### En mode développeur, depuis les sources
 
@@ -32,7 +34,7 @@ L’extension est publiée sur le Chrome Web Store : **[Dark Pattern Alert](http
 4. Choisir le dossier `dark-pattern-alert`.
 5. Épingler l’extension, ouvrir un site, cliquer sur son icône : le panneau latéral s’ouvre.
 
-Chrome 114 minimum (API `sidePanel`).
+Chrome 116 minimum (`sidePanel.open`, appelé au clic sur l’icône).
 
 ## Ce que l’extension repère
 
@@ -144,7 +146,8 @@ Les éléments signalés sont encadrés directement dans la page :
   <tr>
     <td width="46%"><img src="docs/screenshots/06-settings.png" alt="Panneau de réglages" /></td>
     <td width="54%" valign="top">
-      <p>L’extension demande <code>activeTab</code>, <code>scripting</code>, <code>sidePanel</code> et <code>storage</code> — rien de plus. Elle n’observe pas la navigation en arrière-plan et n’ouvre aucune connexion réseau.</p>
+      <p>L’extension demande <code>activeTab</code>, <code>scripting</code>, <code>sidePanel</code> et <code>storage</code> — rien de plus à l’installation. Elle n’observe pas la navigation en arrière-plan et n’ouvre aucune connexion réseau.</p>
+      <p><code>activeTab</code> n’ouvre l’accès qu’après un clic sur l’icône, et le referme à la navigation suivante. Pour éviter ce clic avant chaque page, l’extension propose d’accorder une permission d’hôte <strong>facultative</strong>, site par site ou pour tous : jamais accordée à l’installation, révocable depuis <code>chrome://extensions</code>, et sans effet sur ce qui est lu ni sur le moment où ça l’est.</p>
       <p><strong>Mémoriser les domaines analysés</strong> conserve au plus 500 noms de domaine sur lesquels une analyse a été explicitement lancée, uniquement pour signaler une première visite. Ni URL complète, ni horodatage, ni contenu de page. Désactivable avant toute analyse, effaçable d’un clic.</p>
       <p><strong>Comparer les compteurs</strong> conserve, pour au plus 200 pages portant un décompte, l’adresse sans paramètres, la valeur relevée et sa date. C’est ce qui permet de dire « ce compteur s’est réarmé » plutôt que « ce compteur est peut-être faux ». Même bouton d’effacement.</p>
       <p><strong>Tenir compte de mes retours</strong> conserve, pour au plus 300 sites, les signaux que vous avez confirmés ou écartés — sous forme d’empreinte, sans contenu de page. Même bouton d’effacement.</p>
@@ -198,7 +201,7 @@ Séparer la collecte (`site-probe.js`) de l’évaluation (`reputation-rules.js`
 
 ## Publication
 
-La version 0.1.0 est en ligne sur le Chrome Web Store : [chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln).
+L’extension est en ligne sur le Chrome Web Store : [chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln](https://chromewebstore.google.com/detail/dark-pattern-alert/ijcbhdgemjcnameknabefjkcbdkhnlln). La `0.1.0` publiée le 2 août 2026 ne pouvait analyser aucune page — le panneau s’ouvrait sans que Chrome accorde `activeTab` — ce que la `0.1.1` corrige.
 
 Tout le nécessaire pour republier est dans [`store/`](store/) :
 

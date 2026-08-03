@@ -1,6 +1,6 @@
 # Politique de confidentialité — Dark Pattern Alert
 
-Dernière mise à jour : 2 août 2026
+Dernière mise à jour : 3 août 2026
 
 Dark Pattern Alert analyse la page active uniquement lorsque l’utilisateur lance explicitement une analyse. Le contenu de la page et les résultats restent dans le navigateur et ne sont transmis à aucun serveur.
 
@@ -18,7 +18,9 @@ Lorsque l’option **Tenir compte de mes retours** est active, l’extension enr
 
 Lorsque l’option **Suivre les parcours de résiliation** est active, l’extension enregistre, pour au plus 100 sites et 30 étapes par site, le chemin des pages de résiliation qui ont été analysées et les obstacles qui y ont été relevés. Ce suivi ne repose sur aucune observation de la navigation : une page n’y figure que si l’utilisateur a explicitement lancé une analyse dessus. Aucun contenu de page n’est conservé. Ces étapes s’effacent avec le bouton **Effacer les données locales**.
 
-La permission `activeTab` donne un accès temporaire à la page ouverte après une action de l’utilisateur. La permission `scripting` permet d’y exécuter les détecteurs. La permission `sidePanel` affiche le rapport. La permission `storage` conserve les préférences locales.
+La permission `activeTab` donne un accès temporaire à la page ouverte après une action de l’utilisateur — le clic sur l’icône de l’extension — et cet accès retombe dès que la page change. La permission `scripting` permet d’y exécuter les détecteurs. La permission `sidePanel` affiche le rapport. La permission `storage` conserve les préférences locales.
+
+L’extension déclare en outre des **permissions d’hôte facultatives** (`http://*/*`, `https://*/*`), qui ne sont **jamais accordées à l’installation**. L’utilisateur peut les accorder lui-même, pour un seul site ou pour tous, afin de ne plus avoir à cliquer sur l’icône avant chaque analyse. Cette autorisation ne change ni ce que l’extension lit, ni quand elle le lit : l’analyse ne démarre toujours qu’à la demande explicite de l’utilisateur, et aucune donnée n’est envoyée. Elle se révoque depuis `chrome://extensions`.
 
 La suppression de l’extension efface ces préférences et l’ensemble des données locales décrites ci-dessus.
 

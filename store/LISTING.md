@@ -129,6 +129,12 @@ Analyser, à la demande de l’utilisateur, la page qu’il consulte afin d’y 
 L’extension lit le contenu de l’onglet actif uniquement après que l’utilisateur a cliqué sur son icône, pour y chercher les procédés trompeurs et les signaux de sécurité qu’elle rapporte. Cette permission a été choisie précisément parce qu’elle n’accorde l’accès qu’après une action explicite de l’utilisateur, et sur le seul onglet concerné.
 ```
 
+### Justification des permissions d’hôte facultatives (`http://*/*`, `https://*/*`)
+
+```
+Ces permissions ne sont pas demandées à l’installation : elles sont déclarées en optional_host_permissions et ne sont accordées que si l’utilisateur clique lui-même sur « Toujours autoriser ce site » ou « Autoriser sur tous les sites ». L’accès obtenu par activeTab retombe à chaque navigation, ce qui oblige sinon à cliquer sur l’icône avant chaque page analysée. L’autorisation ne change ni la nature ni le moment de la lecture : l’analyse ne démarre qu’à la demande explicite de l’utilisateur, rien n’est observé en arrière-plan et aucune donnée n’est transmise.
+```
+
 ### Justification de `scripting`
 
 ```
@@ -218,6 +224,6 @@ Ces trois points ne peuvent pas être décidés à votre place.
    `guillaume.dallolmo@gmail.com`, sous le nom d’éditeur « Guillaume Dall Olmo ».
    Même adresse que dans `PRIVACY.md`, donc rien à opposer à l’examen.
 3. ~~Numéro de version.~~ **Tranché** : première publication en `0.1.0`, assumée
-   comme telle. La fiche affichera « Version 0.1.0 ». Toute mise à jour devra
-   porter un numéro strictement supérieur — `0.1.1`, `0.2.0`, `1.0.0` — un numéro
-   publié ne pouvant jamais être réutilisé.
+   comme telle. Toute mise à jour devra porter un numéro strictement supérieur —
+   un numéro publié ne pouvant jamais être réutilisé. La `0.1.1` corrige l’accès
+   aux pages, que la `0.1.0` n’obtenait jamais : c’est elle que la fiche affiche.

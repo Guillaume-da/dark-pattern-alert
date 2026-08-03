@@ -95,6 +95,15 @@ Un onglet incomplet empêche la soumission et le bouton indique lequel.
    avec l’état du projet et annonce honnêtement une première version. Conséquence à
    retenir : `0.1.0` est désormais brûlé, la prochaine soumission devra porter un
    numéro strictement supérieur.
+4. ~~`0.1.0` n’analysait aucune page.~~ **Corrigé en `0.1.1`** : le panneau
+   s’ouvrait par `setPanelBehavior({ openPanelOnActionClick: true })`, chemin qui ne
+   déclenche pas `action.onClicked` et n’accorde donc pas `activeTab` ; Chrome
+   masquait jusqu’à l’URL de l’onglet et toute injection était refusée, sur tous les
+   sites. Le clic sur l’icône est désormais écouté puis suivi de `sidePanel.open()`,
+   et des permissions d’hôte **facultatives** permettent d’accorder un accès durable,
+   par site ou pour tous. Un champ de justification supplémentaire est donc à remplir
+   dans l’onglet Confidentialité (texte prêt dans `LISTING.md`), et
+   `minimum_chrome_version` passe à `116`.
 
 ---
 

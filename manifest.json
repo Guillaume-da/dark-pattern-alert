@@ -1,15 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Dark Pattern Alert",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Repère les interfaces trompeuses et explique le risque, directement dans votre navigateur.",
   "homepage_url": "https://github.com/Guillaume-da/dark-pattern-alert",
-  "minimum_chrome_version": "114",
+  "minimum_chrome_version": "116",
   "permissions": [
     "activeTab",
     "scripting",
     "sidePanel",
     "storage"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
   "background": {
     "service_worker": "background.js"

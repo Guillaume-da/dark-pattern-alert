@@ -95,6 +95,10 @@
         <h1 id="errorTitle">Cette page est protégée par Chrome</h1>
         <p id="errorMessage">Ouvrez un site web classique, puis relancez l’analyse.</p>
         <button class="secondary-button" id="retryButton" type="button">Réessayer</button>
+        <button class="secondary-button" id="grantAllButton" type="button" hidden>Autoriser sur tous les sites</button>
+        <p class="shortcut-hint" id="grantAllHint" hidden>
+          Une seule fois, révocable à tout moment depuis <code>chrome://extensions</code>. L’extension n’enverra toujours rien : l’autorisation lui évite seulement de redemander l’accès à chaque page.
+        </p>
       </section>
 
       <section class="results" id="resultsState" hidden aria-live="polite">
@@ -108,6 +112,11 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" /></svg>
           </button>
         </div>
+
+        <p class="access-note" id="accessNote" hidden>
+          <span>Accès accordé pour cette visite seulement.</span>
+          <button class="text-button" id="grantSiteButton" type="button">Toujours autoriser ce site</button>
+        </p>
 
         <section class="trust-card" id="trustCard" data-level="trusted" aria-labelledby="trustTitle" hidden>
           <div class="trust-head">

@@ -5,6 +5,10 @@ const els = {
   results: document.querySelector("#resultsState"),
   scanButton: document.querySelector("#scanButton"),
   retryButton: document.querySelector("#retryButton"),
+  grantAllButton: document.querySelector("#grantAllButton"),
+  grantAllHint: document.querySelector("#grantAllHint"),
+  accessNote: document.querySelector("#accessNote"),
+  grantSiteButton: document.querySelector("#grantSiteButton"),
   rescanButton: document.querySelector("#rescanButton"),
   settingsButton: document.querySelector("#settingsButton"),
   closeSettingsButton: document.querySelector("#closeSettingsButton"),
@@ -73,6 +77,7 @@ const state = {
   showDismissed: false,
   journey: null,
   activeTabId: null,
+  scannedUrl: "",
   filter: "all",
   loadingTimer: null,
   toastTimer: null
@@ -242,26 +247,83 @@ const currentTab = async () => {
   return tab;
 };
 
-const isScannableUrl = (url = "") => /^(https?:|file:)/i.test(url);
+// Le Web Store est fermé aux extensions, comme les pages internes du
+// navigateur : aucune autorisation ne peut y donner accès.
+const STORE_URL = /^https?:\/\/(chromewebstore\.google\.com|chrome\.google\.com\/webstore)/i;
 
+const isScannableUrl = (url = "") => /^(https?:|file:)/i.test(url) && !STORE_URL.test(url);
+
+const scanError = (kind, message) => Object.assign(new Error(message), { dpaKind: kind });
+
+// Origine à demander en permission persistante. `file:` en est exclu : Chrome ne
+// l'accorde que par la case « Autoriser l'accès aux URL de fichier ».
+const grantableOrigin = (url = "") => {
+  try {
+    const { protocol, origin } = new URL(url);
+    return /^https?:$/i.test(protocol) ? `${origin}/*` : "";
+  } catch {
+    return "";
+  }
+};
+
+const hasHostPermission = async (url = "") => {
+  const origin = grantableOrigin(url);
+  if (!origin) return false;
+  try {
+    return await chrome.permissions.contains({ origins: [origin] });
+  } catch {
+    return false;
+  }
+};
+
+// Trois échecs à ne pas confondre : la page qu'aucune extension ne peut lire,
+// celle que Chrome nous refuse faute d'autorisation, et celle qui ne répond pas.
 const userFacingError = (error, url = "") => {
   const message = error instanceof Error ? error.message : String(error);
-  if (!isScannableUrl(url) || /cannot access|chrome:\/\/|edge:\/\/|extensions gallery/i.test(message)) {
+  const kind =
+    error?.dpaKind ||
+    (/cannot access contents|must request permission|extension manifest/i.test(message)
+      ? "permission"
+      : /receiving end does not exist|could not establish connection/i.test(message)
+        ? "unresponsive"
+        : "generic");
+
+  if (kind === "restricted") {
     return {
+      kind,
       title: "Cette page est protégée par Chrome",
-      message: "Ouvrez un site web classique, puis cliquez de nouveau sur l’icône de l’extension."
+      message: "Ouvrez un site web classique, puis relancez l’analyse."
     };
   }
-  if (/receiving end does not exist|could not establish connection/i.test(message)) {
+  if (kind === "permission") {
     return {
+      kind,
+      title: "Chrome n’a pas ouvert cette page à l’extension",
+      message:
+        "Cliquez sur l’icône Dark Pattern Alert dans la barre d’outils : Chrome accorde alors l’accès à l’onglet, le temps de cette page. Pour ne plus avoir à le faire, autorisez l’extension une fois pour toutes.",
+      offerGrant: true
+    };
+  }
+  if (kind === "unresponsive") {
+    return {
+      kind,
       title: "La page n’a pas répondu",
       message: "Rechargez la page, puis relancez l’analyse."
     };
   }
   return {
+    kind,
     title: "L’analyse n’a pas abouti",
     message: "La structure de cette page empêche peut-être son inspection. Vous pouvez réessayer après l’avoir rechargée."
   };
+};
+
+// L'accès obtenu par un clic sur l'icône vaut pour la page en cours et retombe
+// à la navigation suivante. Tant qu'il n'est pas devenu durable pour ce site,
+// on le dit, et on propose de le rendre permanent.
+const renderAccessNote = async () => {
+  const origin = grantableOrigin(state.scannedUrl);
+  els.accessNote.hidden = !origin || (await hasHostPermission(state.scannedUrl));
 };
 
 const startLoadingMessages = () => {
@@ -294,7 +356,10 @@ const runScan = async () => {
 
   try {
     tab = await currentTab();
-    if (!isScannableUrl(tab.url)) throw new Error(`Cannot access ${tab.url || "this page"}`);
+    // Sans autorisation, Chrome masque jusqu'à l'URL de l'onglet : une URL
+    // absente signale un défaut d'accès, pas une page interdite.
+    if (!tab.url) throw scanError("permission", "Tab URL hidden without host access.");
+    if (!isScannableUrl(tab.url)) throw scanError("restricted", `Cannot access ${tab.url}`);
     state.activeTabId = tab.id;
 
     await chrome.scripting.insertCSS({
@@ -325,6 +390,8 @@ const runScan = async () => {
       : null;
     state.filter = "all";
     els.highlightToggle.checked = els.autoHighlight.checked;
+    state.scannedUrl = response.report.url || tab.url;
+    await renderAccessNote();
     renderReport();
     setView("results");
   } catch (error) {
@@ -332,6 +399,8 @@ const runScan = async () => {
     const friendly = userFacingError(error, tab?.url);
     els.errorTitle.textContent = friendly.title;
     els.errorMessage.textContent = friendly.message;
+    els.grantAllButton.hidden = !friendly.offerGrant;
+    els.grantAllHint.hidden = !friendly.offerGrant;
     setView("error");
   } finally {
     stopLoadingMessages();
@@ -884,6 +953,38 @@ const reportAsText = () => {
 els.scanButton.addEventListener("click", runScan);
 els.retryButton.addEventListener("click", runScan);
 els.rescanButton.addEventListener("click", runScan);
+
+// Les deux portes de sortie quand Chrome refuse l'accès : l'autorisation
+// générale depuis l'écran d'erreur, l'autorisation site par site depuis le
+// rapport. Aucune des deux ne change ce que l'extension fait de la page.
+els.grantAllButton.addEventListener("click", async () => {
+  try {
+    const granted = await chrome.permissions.request({ origins: ["http://*/*", "https://*/*"] });
+    if (granted) await runScan();
+    else showToast("Autorisation refusée");
+  } catch {
+    showToast("Autorisation impossible depuis ce panneau");
+  }
+});
+
+els.grantSiteButton.addEventListener("click", async () => {
+  const origin = grantableOrigin(state.scannedUrl);
+  if (!origin) return;
+  try {
+    const granted = await chrome.permissions.request({ origins: [origin] });
+    if (!granted) return showToast("Autorisation refusée");
+    els.accessNote.hidden = true;
+    showToast("Ce site est autorisé");
+  } catch {
+    showToast("Autorisation impossible depuis ce panneau");
+  }
+});
+
+// Un clic sur l'icône rouvre l'accès à l'onglet : si le panneau attendait
+// justement une autorisation, il relance l'analyse de lui-même.
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === "DPA_ACCESS_GRANTED" && !els.error.hidden) runScan();
+});
 
 els.settingsButton.addEventListener("click", () => {
   const open = els.settingsPanel.hidden;
